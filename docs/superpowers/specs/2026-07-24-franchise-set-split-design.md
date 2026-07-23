@@ -166,7 +166,7 @@ is **widened** to match either the exact 3-letter code or a substring of
 | `set:tla` | code match | code match, unchanged |
 | `set:"avatar ... commander"` | unsupported | name match, new |
 
-Pipe-separated OR is preserved on both operators: `fr:"fallout\|marvel"`. The
+Pipe-separated OR is preserved on both operators: `fr:"fallout|marvel"`. The
 pipe rather than comma remains necessary because `Warhammer 40,000` contains a
 comma.
 
@@ -175,6 +175,27 @@ Sort keys: `order=franchise` reads `franchises`; `order=set` is added, reading
 
 Breaking `fr:"promos"` is accepted. Nothing on the site links to it, and there is
 no deployed traffic to preserve.
+
+## Reskin suggester
+
+`backend/suggest.py:95` scores a card by matching the user's description against
+`ub_franchises`, at `WEIGHTS["franchise"] = 6` — the heaviest signal in
+`suggest_lexicon.py` (color 3, role 3, keyword 4, type 2).
+
+The field is repointed to `franchises`. This also fixes a pre-existing scoring
+bug: the loop adds the weight **once per matching set name**, so a description
+mentioning "avatar" scores an Avatar card +18 across its three sets, while
+"doctor who" scores +6 across its one. Franchise breadth inflates rank for
+reasons unrelated to relevance, and `why` returns three near-duplicate lines.
+
+Reading `franchises` collapses this to a flat +6 and yields one clean
+`franchise: Avatar: The Last Airbender` explanation.
+
+No weight retuning is in scope. The fix is a side effect of using the correct
+field, and the relative weights stay as they are.
+
+`Unassigned` must not be matchable — a description containing the word
+"unassigned" should not score. The suggester skips that value explicitly.
 
 ## API
 
@@ -192,12 +213,24 @@ Both keep the existing shape: `{"franchises": [{"name": ..., "count": ...}]}` an
 - `/sets` is new. The current franchises page markup verbatim, listing the 39
   sets, each linking to `/search?q=set:"<name>"`.
 - Header nav gains `Sets` immediately after `Franchises`.
-- Card detail and result views display both dimensions.
-- `types.ts`, `lib/api.ts`, `advanced/page.tsx` (operator reference), and
-  `about/page.tsx` (syntax docs) are updated for the renamed field and the new
-  operator meanings.
-
 Browsing by IP is the more common intent, so `Franchises` stays first in nav.
+
+Every current reader of `ub_franchises`:
+
+| File | Current | Change |
+|---|---|---|
+| `src/types/types.ts:44` | `ub_franchises: string[]` | replaced by `set_names` + `franchises` |
+| `src/components/ResultViews.tsx:85` | `{c.ub_franchises[0]}` badge | shows `franchises[0]` |
+| `src/app/card/[id]/page.tsx:109` | maps `ub_franchises` | two rows — franchises and set names |
+| `src/app/search/page.tsx:10` | `ORDERS = [... "franchise"]` | adds `"set"` |
+| `src/lib/api.ts` | `getFranchises` | plus `getSets` |
+| `src/app/advanced/page.tsx` | operator reference | `fr:` and `set:` meanings |
+| `src/app/about/page.tsx` | syntax docs | same |
+| `src/components/SuggestResults.tsx:54` | help text says "franchise name" | still accurate, no change |
+
+`ResultViews` showing `franchises[0]` is a deliberate narrowing: a card in three
+Avatar sets currently renders whichever set name sorts first, which is noise. The
+franchise is the stable label.
 
 ## Testing
 
@@ -217,6 +250,12 @@ Browsing by IP is the more common intent, so `Franchises` stays first in nav.
 `backend/tests/test_cards_api.py`
 - `/api/franchises` returns 14 rows; `/api/sets` returns 39.
 - Response shapes.
+
+`backend/tests/test_suggest.py` and `test_suggest_api.py`
+- A description naming a franchise scores it once, not once per set. This is the
+  regression test for the double-counting bug described above.
+- `why` contains a single `franchise: <name>` entry.
+- A description containing "unassigned" scores no franchise points.
 
 Existing fixtures in `backend/tests/conftest.py` and
 `scripts/tests/fixtures/scryfall_card.json` are updated for the renamed field.
