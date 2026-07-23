@@ -1,0 +1,30 @@
+# dependencies
+/node_modules
+backend/.venv
+__pycache__/
+*.pyc
+
+# next.js
+/.next
+/out
+next-env.d.ts
+*.tsbuildinfo
+
+# env / secrets — never commit connection strings or admin creds
+.env
+.env.*
+!.env.example
+
+# tests
+.pytest_cache/
+
+# harness / local tooling
+.claude/
+.superpowers/
+backend/.claude/
+
+# os
+.DS_Store
+
+# stray asset
+28hzfmmtyceh1.jpg

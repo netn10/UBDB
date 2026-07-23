@@ -1,0 +1,30 @@
+{
+  "name": "The Omen Archive",
+  "description": "MTG Universes Beyond reskin database — Next.js frontend + Flask API on a single dyno.",
+  "buildpacks": [
+    { "url": "heroku/python" },
+    { "url": "heroku/nodejs" }
+  ],
+  "env": {
+    "UBDB_MONGO_URI": {
+      "description": "MongoDB Atlas SRV connection string (reskins, users, sessions).",
+      "required": true
+    },
+    "UBDB_MONGO_DB": {
+      "description": "Mongo database name.",
+      "value": "ubdb"
+    },
+    "UBDB_ADMIN_USER": {
+      "description": "Bootstrap admin username (created on boot if absent).",
+      "required": false
+    },
+    "UBDB_ADMIN_PASS": {
+      "description": "Bootstrap admin password.",
+      "required": false
+    },
+    "NPM_CONFIG_PRODUCTION": {
+      "description": "Keep devDependencies during build so next build has typescript/tailwind.",
+      "value": "false"
+    }
+  }
+}

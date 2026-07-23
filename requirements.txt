@@ -1,0 +1,4 @@
+# Root requirements so Heroku's Python buildpack activates. Backend deps live
+# in backend/requirements.txt; gunicorn is the production WSGI server.
+-r backend/requirements.txt
+gunicorn>=21.2

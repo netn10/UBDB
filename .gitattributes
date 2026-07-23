@@ -1,0 +1,4 @@
+# Shell scripts and Procfile must stay LF — they run on Heroku's Linux dynos.
+# Without this, committing from Windows can inject CRLF and break `bash web.sh`.
+*.sh    text eol=lf
+Procfile text eol=lf

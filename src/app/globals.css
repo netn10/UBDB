@@ -1,0 +1,145 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: light dark;
+  /* Snap easing — one deliberate curve for every interactive lift/press,
+     replacing the browser/Tailwind default so motion reads as intentional. */
+  --ease-snap: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+body {
+  @apply bg-cardstock text-ink font-body;
+  /* Ambient depth: a faint warm glow anchored top-center, fixed so it
+     doesn't scroll. Turns the flat fill into lit card stock. */
+  background-image: radial-gradient(60rem 40rem at 50% -12%, rgba(201, 162, 39, 0.06), transparent 70%);
+  background-attachment: fixed;
+}
+.dark body {
+  @apply bg-frame text-ink-dark;
+  background-image: radial-gradient(60rem 40rem at 50% -12%, rgba(216, 178, 58, 0.10), transparent 70%);
+}
+
+/* Film grain — felt, not seen. Sits BEHIND content (z-index:-1) so card
+   images stay crisp; only the grounds pick up the texture. */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  opacity: 0.035;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+.dark body::before { opacity: 0.06; }
+
+/* Consistent hover physics: interactive chrome shares the snap curve and a
+   tactile press. Cards keep their own lift+ring; this covers buttons/links. */
+button, select, a[href], [role="button"] {
+  transition-timing-function: var(--ease-snap);
+}
+button:active, [role="button"]:active {
+  transform: translateY(0.5px);
+}
+
+/* Gold keyboard focus ring across the app. */
+:focus-visible {
+  outline: 2px solid theme("colors.gold.DEFAULT");
+  outline-offset: 2px;
+}
+.dark :focus-visible {
+  outline-color: theme("colors.gold.dark");
+}
+
+/* Gentle entrance for result tiles — fade + slight rise. Base state is visible,
+   so the animation only enhances; delay is set inline per tile (capped). */
+@keyframes card-rise {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.card-rise {
+  animation: card-rise 0.4s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* Masthead mana pips settle in one at a time. */
+@keyframes pip-in {
+  from { opacity: 0; transform: scale(0.4); }
+  to   { opacity: 1; transform: scale(1); }
+}
+.pip-in {
+  animation: pip-in 0.45s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+/* Route-change progress bar: crawls to ~90% then the component fades it out. */
+@keyframes progress-crawl {
+  0%   { transform: scaleX(0); }
+  60%  { transform: scaleX(0.7); }
+  100% { transform: scaleX(0.9); }
+}
+.top-progress {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  height: 2px;
+  transform-origin: left;
+  background: linear-gradient(90deg, theme("colors.gold.DEFAULT"), theme("colors.gold.dark"));
+  z-index: 60;
+  animation: progress-crawl 2s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+/* Print sheet: hide the app chrome, show only the proxy grid at card size. */
+.print-sheet { display: none; }
+@media print {
+  header, footer, .no-print { display: none !important; }
+  .print-sheet { display: flex !important; }
+  @page { margin: 8mm; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-delay: 0ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Binder: plastic-sleeve gloss overlay + ring-hole spine. */
+.sleeve { position: relative; }
+.sleeve::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 0.375rem;
+  pointer-events: none;
+  background: linear-gradient(115deg, rgba(255,255,255,0.28) 0%, rgba(255,255,255,0.05) 22%, transparent 45%);
+  transition: opacity 0.3s var(--ease-snap);
+  opacity: 0.6;
+}
+.sleeve:hover::after { opacity: 0.9; }
+@keyframes sheet-flip {
+  from { transform: rotateY(0deg); opacity: 1; }
+  to   { transform: rotateY(-105deg); opacity: 0; }
+}
+.sheet-flipping { animation: sheet-flip 0.45s cubic-bezier(0.22, 1, 0.36, 1) both; transform-origin: left center; }
+
+/* Welcome: slow warm aura pulse behind the hero. */
+@keyframes aura-drift {
+  0%, 100% { transform: translate(-50%, 0) scale(1); opacity: 0.5; }
+  50%      { transform: translate(-50%, -3%) scale(1.08); opacity: 0.8; }
+}
+.welcome-aura {
+  position: absolute;
+  left: 50%; top: 0;
+  width: 70rem; height: 40rem;
+  max-width: 130vw;
+  transform: translate(-50%, 0);
+  pointer-events: none;
+  z-index: -1;
+  background: radial-gradient(ellipse at center, rgba(201,162,39,0.18), transparent 62%);
+  animation: aura-drift 9s ease-in-out infinite;
+}
+.dark .welcome-aura { background: radial-gradient(ellipse at center, rgba(216,178,58,0.22), transparent 62%); }
+
+@media (prefers-reduced-motion: reduce) {
+  .welcome-aura { animation: none; }
+}

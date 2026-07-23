@@ -1,0 +1,82 @@
+[
+  {
+    "_id": "rk-abby-1",
+    "oracle_id": "e05efd01-0202-4bd6-bac6-c6210819d463",
+    "face": 0,
+    "designer_name": "demo_designer",
+    "reskin_name": "Abby, Last of Us",
+    "image_url": "https://cards.scryfall.io/normal/front/2/8/28e11b59-c677-4235-a377-18921c5131f0.jpg?1783905138",
+    "art_credit": "Naughty Dog (demo placeholder)",
+    "art_source": "original",
+    "style": "name-bottom",
+    "tags": [
+      "The Last of Us",
+      "human",
+      "soldier"
+    ],
+    "is_recommended": true
+  },
+  {
+    "_id": "rk-abby-2",
+    "oracle_id": "e05efd01-0202-4bd6-bac6-c6210819d463",
+    "face": 0,
+    "designer_name": "alt_designer",
+    "reskin_name": "Abby (nickname-bar variant)",
+    "image_url": "https://cards.scryfall.io/normal/front/2/8/28e11b59-c677-4235-a377-18921c5131f0.jpg?1783905138",
+    "art_credit": "community (demo placeholder)",
+    "art_source": "original",
+    "style": "nickname-bar",
+    "tags": [
+      "The Last of Us"
+    ],
+    "is_recommended": false
+  },
+  {
+    "_id": "rk-virtue-1",
+    "oracle_id": "d4fddf20-6b3a-42c3-a245-002dacbb4725",
+    "face": 0,
+    "designer_name": "demo_designer",
+    "reskin_name": "Absolute Virtue",
+    "image_url": "https://cards.scryfall.io/normal/front/a/a/aa192912-c9ee-403f-8a46-a338c9edb4b9.jpg?1783906576",
+    "art_credit": "Square Enix (demo placeholder)",
+    "art_source": "original",
+    "style": "name-bottom",
+    "tags": [
+      "Final Fantasy XI",
+      "notorious monster"
+    ],
+    "is_recommended": true
+  },
+  {
+    "_id": "rk-aang-front",
+    "oracle_id": "96e5d4a1-e59f-4140-823f-a17e15ee5d8d",
+    "face": 0,
+    "designer_name": "demo_designer",
+    "reskin_name": "Aang, at the Crossroads",
+    "image_url": "https://cards.scryfall.io/normal/front/f/e/fea89ca0-8070-4f28-9851-994314f9d248.jpg?1783904940",
+    "art_credit": "Nickelodeon (demo placeholder)",
+    "art_source": "original",
+    "style": "name-bottom",
+    "tags": [
+      "Avatar",
+      "monk"
+    ],
+    "is_recommended": true
+  },
+  {
+    "_id": "rk-aang-back",
+    "oracle_id": "96e5d4a1-e59f-4140-823f-a17e15ee5d8d",
+    "face": 1,
+    "designer_name": "demo_designer",
+    "reskin_name": "Aang, Destined Savior",
+    "image_url": "https://cards.scryfall.io/normal/back/f/e/fea89ca0-8070-4f28-9851-994314f9d248.jpg?1783904940",
+    "art_credit": "Nickelodeon (demo placeholder)",
+    "art_source": "original",
+    "style": "name-bottom",
+    "tags": [
+      "Avatar",
+      "avatar state"
+    ],
+    "is_recommended": true
+  }
+]
