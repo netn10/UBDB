@@ -1,13 +1,13 @@
 "use client";
 import Link from "next/link";
 import useSWR from "swr";
-import { use } from "react";
+import { use, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { getCard, getReskins, getRandom, getImageSrc, cardKey, reskinsKey } from "@/lib/api";
+import { getCard, getReskins, getRandom, getImageSrc, cardKey, reskinsKey, adminModerate } from "@/lib/api";
 import { CardFace, Reskin } from "@/types/types";
 import ManaCost from "@/components/ManaCost";
 
-function ReskinSection({ oracleId, reskins, face }: { oracleId: string; reskins: Reskin[]; face: number }) {
+function ReskinSection({ oracleId, reskins, face, onRemove }: { oracleId: string; reskins: Reskin[]; face: number; onRemove?: (rid: string) => void }) {
   const ordered = reskins
     .filter((r) => (r.face ?? 0) === face)
     .sort((a, b) => Number(b.is_recommended) - Number(a.is_recommended));
@@ -50,6 +50,12 @@ function ReskinSection({ oracleId, reskins, face }: { oracleId: string; reskins:
                   <span key={t} className="rounded-card bg-ink/5 px-1.5 text-[10px] text-ink/55 dark:bg-ink-dark/10 dark:text-ink-dark/50">{t}</span>
                 ))}
               </div>
+              {onRemove && (
+                <button onClick={() => onRemove(r._id)}
+                        className="no-print mt-2 rounded-card border border-mana-r/50 px-2 py-0.5 font-display text-[11px] uppercase tracking-wide text-mana-r hover:bg-mana-r/10">
+                  Remove
+                </button>
+              )}
             </div>
           ))}
         </div>
@@ -80,7 +86,27 @@ export default function CardPage({ params }: { params: Promise<{ id: string }> }
   const { id } = use(params);
   const router = useRouter();
   const { data: card, error } = useSWR(cardKey(id), () => getCard(id));
-  const { data: reskins = [] } = useSWR(reskinsKey(id), () => getReskins(id));
+  const { data: reskins = [], mutate: mutateReskins } = useSWR(reskinsKey(id), () => getReskins(id));
+
+  const [adminToken, setAdminToken] = useState<string | null>(null);
+  useEffect(() => { setAdminToken(localStorage.getItem("ubdb.session")); }, []);
+
+  async function removeReskin(rid: string) {
+    if (!adminToken) return;
+    if (!window.confirm("Remove this reskin? This can't be undone.")) return;
+    try {
+      await adminModerate(rid, "reject", adminToken);
+      mutateReskins();
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : String(e);
+      if (msg === "unauthorized") {
+        localStorage.removeItem("ubdb.session");
+        setAdminToken(null);
+      } else {
+        window.alert("Remove failed: " + msg);
+      }
+    }
+  }
 
   if (error) return <main className="py-10 font-body">Card not found.</main>;
   if (!card) return <main className="py-10 font-mono text-sm text-ink/50 dark:text-ink-dark/40">Loading…</main>;
@@ -131,7 +157,7 @@ export default function CardPage({ params }: { params: Promise<{ id: string }> }
         </div>
         <FaceDetails {...frontFace} />
       </section>
-      <ReskinSection oracleId={card.oracle_id} reskins={reskins} face={0} />
+      <ReskinSection oracleId={card.oracle_id} reskins={reskins} face={0} onRemove={adminToken ? removeReskin : undefined} />
 
       {isDfc && (
         <section id="face-back" className="mt-12 border-t border-gold/20 pt-8">
@@ -141,7 +167,7 @@ export default function CardPage({ params }: { params: Promise<{ id: string }> }
             </div>
             <FaceDetails {...card.faces[1]} />
           </div>
-          <ReskinSection oracleId={card.oracle_id} reskins={reskins} face={1} />
+          <ReskinSection oracleId={card.oracle_id} reskins={reskins} face={1} onRemove={adminToken ? removeReskin : undefined} />
         </section>
       )}
 
