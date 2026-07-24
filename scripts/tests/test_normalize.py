@@ -1,8 +1,24 @@
 import json
 import os
+
+import pytest
+
+import sync_ub_cards
 from sync_ub_cards import normalize_print, group_prints
 
 HERE = os.path.dirname(os.path.abspath(__file__))
+
+
+@pytest.fixture(autouse=True)
+def _fixture_maps(monkeypatch):
+    # The fixture's set names include "Special Guests", which is not a real UB
+    # set. Inject a test set_map so group_prints resolves deterministically
+    # without depending on (or mutating) the committed data files.
+    set_map = {
+        "Avatar: The Last Airbender": "Avatar: The Last Airbender",
+        "Special Guests": None,  # treated as franchise-mixed
+    }
+    monkeypatch.setattr(sync_ub_cards, "_MAPS", (set_map, {}))
 
 
 def _prints():
@@ -35,9 +51,31 @@ def test_group_collapses_two_prints_into_one_card():
     assert len(card["prints"]) == 2
 
 
-def test_group_lists_all_franchises_sorted_unique():
+def test_group_lists_set_names_sorted_unique():
     card = group_prints(_prints())[0]
-    assert card["ub_franchises"] == ["Avatar: The Last Airbender", "Special Guests"]
+    # The slx print is dropped, so "Universes Within" never reaches set_names.
+    assert card["set_names"] == ["Avatar: The Last Airbender", "Special Guests"]
+    assert "ub_franchises" not in card
+
+
+def test_group_computes_franchises_from_set_names():
+    card = group_prints(_prints())[0]
+    # Avatar maps to its franchise; "Special Guests" is mapped to None (mixed)
+    # by the injected test set_map, so it contributes nothing.
+    assert card["franchises"] == ["Avatar: The Last Airbender"]
+
+
+def test_group_drops_universes_within_print():
+    card = group_prints(_prints())[0]
+    assert all(p["set"] != "slx" for p in card["prints"])
+
+
+def test_group_drops_card_that_is_only_universes_within():
+    # A card whose sole print is slx is not a UB card and is excluded entirely.
+    raw = [dict(_prints()[0])]
+    raw[0]["set"] = "slx"
+    raw[0]["set_name"] = "Universes Within"
+    assert group_prints(raw) == []
 
 
 def test_group_picks_first_available_art_as_thumb():

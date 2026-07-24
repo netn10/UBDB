@@ -6,12 +6,20 @@
     "oracle_text": "Flying\nWhenever Aang attacks, ...",
     "mana_cost": "{2}{W}{U}",
     "type_line": "Legendary Creature — Human Monk",
-    "colors": ["W", "U"],
-    "color_identity": ["U", "W"],
+    "colors": [
+      "W",
+      "U"
+    ],
+    "color_identity": [
+      "U",
+      "W"
+    ],
     "cmc": 4.0,
     "power": "3",
     "toughness": "4",
-    "keywords": ["Flying"],
+    "keywords": [
+      "Flying"
+    ],
     "layout": "normal",
     "rarity": "mythic",
     "released_at": "2025-11-21",
@@ -33,12 +41,20 @@
     "oracle_text": "Flying\nWhenever Aang attacks, ...",
     "mana_cost": "{2}{W}{U}",
     "type_line": "Legendary Creature — Human Monk",
-    "colors": ["W", "U"],
-    "color_identity": ["U", "W"],
+    "colors": [
+      "W",
+      "U"
+    ],
+    "color_identity": [
+      "U",
+      "W"
+    ],
     "cmc": 4.0,
     "power": "3",
     "toughness": "4",
-    "keywords": ["Flying"],
+    "keywords": [
+      "Flying"
+    ],
     "layout": "normal",
     "rarity": "rare",
     "released_at": "2024-06-14",
@@ -56,7 +72,9 @@
     "name": "Katara // Waterbender",
     "oracle_text": "",
     "type_line": "Legendary Creature — Human // Legendary Creature — Human",
-    "color_identity": ["U"],
+    "color_identity": [
+      "U"
+    ],
     "cmc": 3.0,
     "keywords": [],
     "layout": "transform",
@@ -70,7 +88,9 @@
       {
         "name": "Katara",
         "mana_cost": "{1}{U}{U}",
-        "colors": ["U"],
+        "colors": [
+          "U"
+        ],
         "power": "2",
         "toughness": "3",
         "image_uris": {
@@ -85,11 +105,50 @@
         "mana_cost": "",
         "type_line": "Legendary Creature — Human",
         "oracle_text": "Waterbending.",
-        "colors": ["U"],
+        "colors": [
+          "U"
+        ],
         "power": "4",
         "toughness": "4",
-        "image_uris": { "normal": "https://cards.scryfall.io/normal/k2.jpg" }
+        "image_uris": {
+          "normal": "https://cards.scryfall.io/normal/k2.jpg"
+        }
       }
     ]
+  },
+  {
+    "id": "print-aaaa-0000-0000-000000000099",
+    "oracle_id": "oracle-1111-0000-0000-000000000001",
+    "name": "Aang, Airbending Master",
+    "oracle_text": "Flying\nWhenever Aang attacks, ...",
+    "mana_cost": "{2}{W}{U}",
+    "type_line": "Legendary Creature — Human Monk",
+    "colors": [
+      "W",
+      "U"
+    ],
+    "color_identity": [
+      "U",
+      "W"
+    ],
+    "cmc": 4.0,
+    "power": "3",
+    "toughness": "4",
+    "keywords": [
+      "Flying"
+    ],
+    "layout": "normal",
+    "rarity": "mythic",
+    "released_at": "2026-01-01",
+    "set": "slx",
+    "set_name": "Universes Within",
+    "collector_number": "99",
+    "reprint": false,
+    "image_uris": {
+      "small": "https://cards.scryfall.io/small/uw1.jpg",
+      "normal": "https://cards.scryfall.io/normal/uw1.jpg",
+      "art_crop": "https://cards.scryfall.io/art_crop/uw1.jpg",
+      "png": "https://cards.scryfall.io/png/uw1.png"
+    }
   }
 ]

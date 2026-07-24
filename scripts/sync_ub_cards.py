@@ -18,8 +18,23 @@ from typing import Optional
 
 import requests
 
+import franchise_map
+
 SEARCH_URL = "https://api.scryfall.com/cards/search"
 QUERY = "is:ub game:paper"
+# Universes Within: the MTG-native counterparts of UB cards. Not Universes
+# Beyond, so not part of this database. Scryfall no longer tags them is:ub, but
+# exclude the set explicitly in case a printing is ever re-filed under one.
+UNIVERSES_WITHIN = {"slx"}
+# Loaded once on first use; tests monkeypatch this to inject deterministic maps.
+_MAPS = None
+
+
+def _maps():
+    global _MAPS
+    if _MAPS is None:
+        _MAPS = franchise_map.load_maps(franchise_map.DEFAULT_DATA_DIR)
+    return _MAPS
 HEADERS = {
     "User-Agent": "UBDB/0.1 (github.com/<user>/ubdb)",
     "Accept": "application/json",
@@ -139,9 +154,13 @@ def group_prints(raw_cards: list) -> list:
             }
         card["prints"].append(normalize_print(raw))
 
+    set_map, overrides = _maps()
     result = []
     for card in by_oracle.values():
-        prints = card["prints"]
+        prints = [p for p in card["prints"] if p["set"] not in UNIVERSES_WITHIN]
+        card["prints"] = prints
+        if not prints:
+            continue  # existed only as Universes Within, so not a UB card
         # Keep only cards born in Universes Beyond, i.e. cards that have no
         # within-universe (normal Magic) equivalent. A card whose every UB
         # printing is a reprint already existed as a regular card before its
@@ -151,7 +170,9 @@ def group_prints(raw_cards: list) -> list:
         # such counterpart.
         if not any(p["reprint"] is False for p in prints):
             continue
-        card["ub_franchises"] = sorted({p["set_name"] for p in prints if p["set_name"]})
+        card["set_names"] = sorted({p["set_name"] for p in prints if p["set_name"]})
+        card["franchises"] = franchise_map.resolve_franchises(
+            card["set_names"], card["oracle_id"], set_map, overrides)
         card["art_uri"] = next((p["art_uri"] for p in prints if p["art_uri"]), None)
         dates = [p["released_at"] for p in prints if p.get("released_at")]
         card["released_at"] = min(dates) if dates else None
