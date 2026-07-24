@@ -1,26 +1,28 @@
 # UBDB
 
-A browsable database of Magic: The Gathering **Universes Beyond** cards, with community "reskins" — proposals that re-theme a UB card back into (or into another) franchise. Card data comes from Scryfall; reskins and admin accounts live in MongoDB.
+A browsable database of Magic: The Gathering *Universes Beyond* cards. On top of the card data it collects community "reskins": proposals that re-theme a UB card back into its original franchise, or into a different one. Card data comes from Scryfall. The reskins and admin accounts live in MongoDB.
 
-- **Frontend:** Next.js 14 (App Router) + TypeScript + Tailwind
-- **Backend:** Flask API serving a read-only Scryfall snapshot, with Mongo for reskins/users/sessions
-- **Data:** ~3,000 UB cards synced from Scryfall into `data/ub_cards/cards.json`
+Stack:
+
+- Frontend is Next.js 14 (App Router), TypeScript, and Tailwind.
+- Backend is a small Flask API. It serves a read-only Scryfall snapshot and talks to Mongo for reskins, users, and sessions.
+- The card data is about 3,000 UB cards synced from Scryfall into `data/ub_cards/cards.json`.
 
 ## Layout
 
 ```
 src/            Next.js frontend (app router, components, lib)
 backend/        Flask API (app.py, search.py, db.py, auth.py, tests)
-scripts/        sync_ub_cards.py — pulls UB cards from Scryfall
+scripts/        sync_ub_cards.py, which pulls UB cards from Scryfall
 data/           ub_cards/cards.json (snapshot) + reskins/reskins.json
-docs/           env-vars.md — full env reference
+docs/           env-vars.md, the full env reference
 ```
 
 ## Quick start
 
 ### 1. Card data
 
-The card snapshot is committed under `data/ub_cards/cards.json`. To refresh it from Scryfall (no API key needed):
+The card snapshot is already committed under `data/ub_cards/cards.json`, so you can skip this step unless you want fresh data. To refresh it from Scryfall (no API key needed):
 
 ```bash
 pip install -r scripts/requirements.txt
@@ -35,7 +37,7 @@ pip install -r requirements.txt
 flask --app app run            # serves http://127.0.0.1:5000
 ```
 
-Card browsing works with no database (reads from the JSON snapshot). Reskin and admin endpoints require MongoDB and return `503` when it is unreachable. Set `UBDB_MONGO_URI` and bootstrap an admin with `UBDB_ADMIN_USER` / `UBDB_ADMIN_PASS`.
+Card browsing works with no database at all, since it reads straight from the JSON snapshot. The reskin and admin endpoints need MongoDB and return a `503` when it is unreachable. Set `UBDB_MONGO_URI`, and bootstrap an admin with `UBDB_ADMIN_USER` and `UBDB_ADMIN_PASS`.
 
 ### 3. Frontend (Next.js)
 
@@ -44,22 +46,22 @@ npm install
 npm run dev                    # serves http://localhost:3000
 ```
 
-Point it at the backend with `NEXT_PUBLIC_API_URL` (default `http://127.0.0.1:5000/api`).
+Point it at the backend with `NEXT_PUBLIC_API_URL` (defaults to `http://127.0.0.1:5000/api`).
 
 ## Configuration
 
-All environment variables are documented in [`docs/env-vars.md`](docs/env-vars.md). The essentials:
+Every environment variable is documented in [`docs/env-vars.md`](docs/env-vars.md). The ones you actually need:
 
 | Var | Where | Purpose |
 | --- | --- | --- |
-| `UBDB_MONGO_URI` | backend | Mongo connection (reskins + users + sessions) |
+| `UBDB_MONGO_URI` | backend | Mongo connection (reskins, users, sessions) |
 | `UBDB_ADMIN_USER` / `UBDB_ADMIN_PASS` | backend | Bootstrap admin on startup |
 | `UB_CARDS_JSON` | backend | Path to the card snapshot |
 | `NEXT_PUBLIC_API_URL` | frontend | Backend API base URL |
 
 ## API
 
-Base path `/api`. Card reads are public; reskin submission needs no login, but approval is admin-only via a Bearer session token.
+Everything lives under `/api`. Card reads are public. Anyone can submit a reskin without logging in, but approving one is admin-only and needs a Bearer session token.
 
 | Method | Path | Purpose |
 | --- | --- | --- |
@@ -81,4 +83,4 @@ cd backend && pytest      # uses in-memory mongomock (UBDB_MONGO_MOCK)
 
 ## Credits
 
-Card data © [Scryfall](https://scryfall.com/) / Wizards of the Coast. This is a personal, non-commercial fan project.
+Card data is © [Scryfall](https://scryfall.com/) and Wizards of the Coast. This is a personal, non-commercial fan project.
