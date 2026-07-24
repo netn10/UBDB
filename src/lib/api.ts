@@ -6,10 +6,17 @@ import { UbCard, SearchResult, Reskin, SuggestResponse } from "@/types/types";
 export const API_BASE_URL =
   process.env.NEXT_PUBLIC_API_URL ?? "/api";
 
-// Cross-origin (Scryfall) images go through the CORS proxy; local/data URIs don't.
+// Scryfall art goes through the proxy (hotlink + CORS for the ZIP export);
+// user-hosted images (imgur, etc.) and data/relative URLs load directly.
+const SCRYFALL_HOSTS = ["cards.scryfall.io", "c1.scryfall.com", "c2.scryfall.com", "svgs.scryfall.io"];
 export function getImageSrc(url?: string | null): string {
   if (!url) return "";
   if (url.startsWith("data:") || url.startsWith("/")) return url;
+  try {
+    if (!SCRYFALL_HOSTS.includes(new URL(url).hostname)) return url;
+  } catch {
+    return url;
+  }
   return `/api/image-proxy?url=${encodeURIComponent(url)}`;
 }
 
