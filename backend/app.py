@@ -310,14 +310,22 @@ def resolve_decklist():
     return jsonify({"results": results})
 
 
-@app.get("/api/franchises")
-def list_franchises():
+def _count_by(field):
     counts = {}
     for c in _CARDS:
-        for name in c.get("ub_franchises", []):
+        for name in c.get(field, []):
             counts[name] = counts.get(name, 0) + 1
-    franchises = [{"name": n, "count": counts[n]} for n in sorted(counts)]
-    return jsonify({"franchises": franchises})
+    return [{"name": n, "count": counts[n]} for n in sorted(counts)]
+
+
+@app.get("/api/franchises")
+def list_franchises():
+    return jsonify({"franchises": _count_by("franchises")})
+
+
+@app.get("/api/sets")
+def list_sets():
+    return jsonify({"sets": _count_by("set_names")})
 
 
 _MAX_COMPLETE = 20

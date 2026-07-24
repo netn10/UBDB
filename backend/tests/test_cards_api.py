@@ -48,8 +48,16 @@ def test_search_endpoint_bad_operator_is_soft(client):
 def test_franchises_lists_counts(client):
     resp = client.get("/api/franchises")
     assert resp.status_code == 200
-    fr = resp.get_json()["franchises"]
-    names = {f["name"]: f["count"] for f in fr}
+    names = {f["name"]: f["count"] for f in resp.get_json()["franchises"]}
+    assert names["Avatar: The Last Airbender"] == 1
+    assert "Special Guests" not in names  # a set name, not a franchise
+    assert "Unassigned" not in names
+
+
+def test_sets_lists_counts(client):
+    resp = client.get("/api/sets")
+    assert resp.status_code == 200
+    names = {s["name"]: s["count"] for s in resp.get_json()["sets"]}
     assert names["Avatar: The Last Airbender"] == 1
     assert names["Special Guests"] == 1
 
