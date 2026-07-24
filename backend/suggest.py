@@ -91,8 +91,11 @@ def _score_card(card, tokens, colors, roles, desc_lower):
             score += lex.WEIGHTS["type"]
             why.append(f"'{t}' -> type")
 
-    # Franchise: whole-word / phrase match on the description.
-    for fr in card.get("ub_franchises", []) or []:
+    # Franchise: whole-word / phrase match on the description. One entry per
+    # franchise (not per set), and never the Unassigned fallback.
+    for fr in card.get("franchises", []) or []:
+        if fr == "Unassigned":
+            continue
         if _franchise_hit(fr, desc_lower):
             score += lex.WEIGHTS["franchise"]
             why.append(f"franchise: {fr}")

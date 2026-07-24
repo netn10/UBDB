@@ -23,17 +23,17 @@ CARDS = [
     {"oracle_id": "w1", "name": "White Wall", "colors": ["W"],
      "keywords": ["Defender"], "toughness": "6", "cmc": 3.0,
      "type_line": "Creature — Human Soldier", "oracle_text": "",
-     "ub_franchises": ["Fallout"], "rarity": "rare", "art_uri": "a",
+     "franchises": ["Fallout"], "rarity": "rare", "art_uri": "a",
      "reskin_count": 0},
     {"oracle_id": "b1", "name": "Black Blade", "colors": ["B"],
      "keywords": ["Deathtouch"], "toughness": "1", "cmc": 2.0,
      "type_line": "Creature — Human Assassin", "oracle_text": "",
-     "ub_franchises": ["The Last of Us"], "rarity": "mythic", "art_uri": "b",
+     "franchises": ["The Last of Us"], "rarity": "mythic", "art_uri": "b",
      "reskin_count": 5},
     {"oracle_id": "x1", "name": "Plain Bear", "colors": ["G"],
      "keywords": [], "toughness": "2", "cmc": 2.0,
      "type_line": "Creature — Bear", "oracle_text": "",
-     "ub_franchises": [], "rarity": "common", "art_uri": "x",
+     "franchises": [], "rarity": "common", "art_uri": "x",
      "reskin_count": 0},
 ]
 
@@ -83,7 +83,7 @@ def test_color_synonyms_count_once():
 
 def test_distinct_colors_both_count():
     card = [{"oracle_id": "wb", "name": "WB", "colors": ["W", "B"], "keywords": [],
-             "type_line": "Creature", "oracle_text": "", "ub_franchises": [],
+             "type_line": "Creature", "oracle_text": "", "franchises": [],
              "rarity": "rare", "reskin_count": 0, "art_uri": ""}]
     results, _ = score_cards("a noble but ruthless figure", card)  # W + B
     assert results[0]["score"] == 6
@@ -93,14 +93,14 @@ def test_identical_role_conditions_count_once():
     # "tank" and "guardian" share the same condition -> role scored once.
     card = [{"oracle_id": "d", "name": "D", "colors": [], "keywords": ["Defender"],
              "toughness": "6", "type_line": "Creature", "oracle_text": "",
-             "ub_franchises": [], "rarity": "rare", "reskin_count": 0, "art_uri": ""}]
+             "franchises": [], "rarity": "rare", "reskin_count": 0, "art_uri": ""}]
     results, _ = score_cards("a tank guardian", card)
     assert results[0]["score"] == 3
 
 
 def test_franchise_requires_word_boundary():
     card = [{"oracle_id": "h", "name": "H", "colors": [], "keywords": [],
-             "type_line": "Creature", "oracle_text": "", "ub_franchises": ["Halo"],
+             "type_line": "Creature", "oracle_text": "", "franchises": ["Halo"],
              "rarity": "rare", "reskin_count": 0, "art_uri": ""}]
     assert score_cards("the halogen lamp", card)[0] == []      # substring must NOT hit
     hit, _ = score_cards("a hero from Halo", card)
@@ -109,7 +109,7 @@ def test_franchise_requires_word_boundary():
 
 def test_multiword_franchise_still_matches():
     card = [{"oracle_id": "tlou", "name": "T", "colors": [], "keywords": [],
-             "type_line": "Creature", "oracle_text": "", "ub_franchises": ["The Last of Us"],
+             "type_line": "Creature", "oracle_text": "", "franchises": ["The Last of Us"],
              "rarity": "rare", "reskin_count": 0, "art_uri": ""}]
     hit, _ = score_cards("a survivor from The Last of Us", card)
     assert hit and hit[0]["oracle_id"] == "tlou"
@@ -124,11 +124,39 @@ def test_empty_facet_list_drops_signal():
 def test_tie_break_prefers_higher_rarity_then_fewer_reskins():
     tied = [
         {"oracle_id": "lo", "name": "Lo", "colors": ["W"], "keywords": [],
-         "type_line": "Creature", "oracle_text": "", "ub_franchises": [],
+         "type_line": "Creature", "oracle_text": "", "franchises": [],
          "rarity": "common", "reskin_count": 0, "art_uri": ""},
         {"oracle_id": "hi", "name": "Hi", "colors": ["W"], "keywords": [],
-         "type_line": "Creature", "oracle_text": "", "ub_franchises": [],
+         "type_line": "Creature", "oracle_text": "", "franchises": [],
          "rarity": "mythic", "reskin_count": 0, "art_uri": ""},
     ]
     results, _ = score_cards("noble", tied)
     assert results[0]["oracle_id"] == "hi"
+
+
+def test_franchise_scores_once_per_franchise_not_per_set():
+    # A card in three Avatar sets but one franchise scores the franchise weight
+    # exactly once. Regression: the old code read set names and summed per set,
+    # so franchise breadth inflated rank.
+    card = {"oracle_id": "a1", "name": "Aang", "colors": [], "keywords": [],
+            "toughness": "3", "cmc": 4.0, "type_line": "Creature",
+            "oracle_text": "", "rarity": "rare", "art_uri": "a",
+            "reskin_count": 0,
+            "franchises": ["Avatar: The Last Airbender"],
+            "set_names": ["Avatar: The Last Airbender",
+                          "Avatar: The Last Airbender Promos",
+                          "Avatar: The Last Airbender Eternal"]}
+    results, _ = score_cards("an avatar: the last airbender hero", [card])
+    assert results[0]["score"] == lex.WEIGHTS["franchise"]
+    assert [w for w in results[0]["why"] if w.startswith("franchise:")] == [
+        "franchise: Avatar: The Last Airbender"]
+
+
+def test_unassigned_franchise_never_scores():
+    card = {"oracle_id": "u1", "name": "Mystery", "colors": [], "keywords": [],
+            "toughness": "1", "cmc": 1.0, "type_line": "Creature",
+            "oracle_text": "", "rarity": "rare", "art_uri": "u",
+            "reskin_count": 0,
+            "franchises": ["Unassigned"], "set_names": ["Secret Lair Drop"]}
+    results, _ = score_cards("an unassigned thing", [card])
+    assert results == []

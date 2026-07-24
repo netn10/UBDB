@@ -10,7 +10,8 @@ def client(monkeypatch, tmp_path):
         "oracle_id": "oracle-1", "name": "Aang, Airbending Master",
         "oracle_text": "Flying", "mana_cost": "{2}{W}{U}",
         "type_line": "Legendary Creature",
-        "ub_franchises": ["Avatar: The Last Airbender", "Special Guests"],
+        "set_names": ["Avatar: The Last Airbender", "Special Guests"],
+        "franchises": ["Avatar: The Last Airbender"],
         "official_uw_image": None, "art_uri": "https://x/1.jpg",
         "prints": [
             {"scryfall_id": "p1", "set": "tla", "set_name": "Avatar: The Last Airbender",
