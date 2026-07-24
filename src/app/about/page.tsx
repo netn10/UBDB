@@ -38,7 +38,8 @@ export default function About() {
           <li><span className="text-gold">t:creature</span> — filter by card type</li>
           <li><span className="text-gold">id:w</span> — filter by color identity</li>
           <li><span className="text-gold">cmc&lt;=3</span> — filter by mana value</li>
-          <li><span className="text-gold">fr:fallout</span> — filter by Universes Beyond franchise</li>
+          <li><span className="text-gold">fr:fallout</span> — filter by franchise (Avatar, Warhammer, Fallout)</li>
+          <li><span className="text-gold">set:tla</span> — filter by set code or name (e.g. set:&quot;final fantasy commander&quot;)</li>
           <li><span className="text-gold">is:unreskinned</span> — cards with no Universes Within version yet</li>
           <li><span className="text-gold">reskins&gt;=2</span> — filter by how many reskins a card has</li>
           <li><span className="text-gold">o:/deal \d+ damage/</span> — regex match on oracle text</li>
