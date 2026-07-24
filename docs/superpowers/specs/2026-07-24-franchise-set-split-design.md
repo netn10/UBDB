@@ -71,11 +71,16 @@ value means the set is franchise-mixed and cannot be resolved from the set alone
 ```
 
 `card_overrides.json` assigns a franchise to individual cards, keyed by
-`oracle_id`. It exists for cards printed *only* in mixed sets.
+`oracle_id`. It exists for cards printed *only* in mixed sets. The `name` field
+is documentation for the human reader; only `franchise` is read at sync time.
 
 ```json
-{ "<oracle_id>": "Sonic the Hedgehog" }
+{ "<oracle_id>": { "name": "Sonic the Hedgehog", "franchise": "Sonic the Hedgehog" } }
 ```
+
+It ships **populated** with 28 entries covering every card that would otherwise
+be unresolved (see The Unassigned bucket below), so the site launches with no
+`Unassigned` cards.
 
 ## Resolution rule
 
@@ -98,27 +103,63 @@ If `cards.json` contains a set name absent from `set_map.json`, the sync script
 **fails loudly** rather than defaulting. A new Universes Beyond set must be
 mapped deliberately. This is enforced by a test, not only at sync time.
 
+## Universes Within exclusion
+
+Investigation of the unresolved cards surfaced a separate data-quality problem.
+Thirty cards in the current snapshot are not Universes Beyond at all — they are
+**Universes Within** cards, the official MTG-native counterparts Wizards prints
+for UB cards. `Greymond, Avacyn's Stalwart` is the in-universe version of a
+Warhammer card; this site exists to collect *community* reskins of UB cards, so
+the official native versions do not belong in the catalog.
+
+They entered the snapshot by accident of timing. Scryfall originally filed them
+under `Secret Lair Drop` (`sld`, which is `is:ub`); it has since moved them into
+a dedicated `Universes Within` set (code `slx`, **not** `is:ub`). Our snapshot
+predates that move and still records them as `sld`.
+
+The fix is a re-sync. The sync query `is:ub game:paper` no longer matches `slx`
+cards, so **re-running the sync drops all 30 automatically** — card count goes
+3091 → 3061. As defensive insurance against Scryfall re-tagging, the sync also
+explicitly excludes set code `slx`:
+
+```python
+UNIVERSES_WITHIN = {"slx"}
+prints = [p for p in prints if p["set"] not in UNIVERSES_WITHIN]
+if not prints:
+    continue
+```
+
+Because the shipped snapshot is stale, **the implementation must re-sync
+`cards.json`** as part of this work; editing the data files alone is not enough
+to remove these 30 cards.
+
+The dead `official_uw_image` field (populated on 0 of 3091 cards) was clearly
+intended to link a UB card to its Universes Within counterpart and was never
+wired up. Doing so is out of scope here and noted as a follow-up.
+
 ## Franchise list
 
-Fourteen franchises, derived from the 39 sets. Counts are cards, and do not sum
-to the 3091 total because 12 cards belong to more than one franchise.
+Twenty-one franchises after the overrides and the Universes Within exclusion.
+Counts are cards over the 3061-card snapshot and do not sum to the total because
+12 cards belong to more than one franchise. There are no `Unassigned` cards.
 
-| Franchise | Cards | Sets |
-|---|--:|--:|
-| Marvel | 878 | 7 |
-| Final Fantasy | 431 | 4 |
-| Avatar: The Last Airbender | 414 | 3 |
-| Middle-earth | 394 | 6 |
-| Teenage Mutant Ninja Turtles | 260 | 2 |
-| Doctor Who | 189 | 1 |
-| Warhammer 40,000 | 168 | 1 |
-| Fallout | 154 | 1 |
-| Assassin's Creed | 105 | 1 |
-| Unassigned | 58 | 9 |
-| Jurassic World | 20 | 1 |
-| Clue | 16 | 1 |
-| Transformers | 15 | 1 |
-| Star Trek | 1 | 1 |
+| Franchise | Cards | | Franchise | Cards |
+|---|--:|---|---|--:|
+| Marvel | 879 | | Clue | 16 |
+| Final Fantasy | 431 | | Transformers | 15 |
+| Avatar: The Last Airbender | 414 | | Sonic the Hedgehog | 7 |
+| Middle-earth | 394 | | The Last of Us | 4 |
+| Teenage Mutant Ninja Turtles | 260 | | God of War | 3 |
+| Doctor Who | 194 | | Horizon | 1 |
+| Warhammer 40,000 | 168 | | Star Trek | 1 |
+| Fallout | 157 | | Jaws | 1 |
+| Assassin's Creed | 105 | | Ghost of Tsushima | 1 |
+| Jurassic World | 20 | | Tomb Raider | 1 |
+| | | | Uncharted | 1 |
+
+The eight small franchises below Transformers, plus the bumps to Marvel (+1
+Deadpool), Doctor Who (+5) and Fallout (+3), come entirely from the override
+file.
 
 ### Curation decisions
 
@@ -137,21 +178,31 @@ Consistent with Star Trek earning a franchise from a single card.
 
 ### The Unassigned bucket
 
+`Unassigned` remains as the resolution rule's fallback — a real, visible value,
+never a hidden state — but **no card currently lands there**. It exists so a
+future UB card printed only in a mixed set surfaces visibly until it is mapped.
+
 Nine franchise-mixed sets map to `null`: `Secret Lair Drop`,
 `Media and Collaboration Promos`, `Wizards Play Network 2025`,
 `Wizards Play Network 2026`, `Spotlight Series`, `Pro Tour Promos`,
 `URL/Convention Promos`, `MagicFest 2023`, `MagicFest 2025`.
 
-Only 58 cards actually land in `Unassigned` — cards printed *exclusively* in
+Before overrides, 58 cards fell through the map — cards printed *exclusively* in
 those sets. Most Secret Lair cards also appear in a franchise set and resolve
-normally.
+normally. Of the 58:
 
-Those 58 are real IPs with no set of their own: Sonic (`Amy Rose`), Horizon
-(`Aloy, Savior of Meridian`), God of War (`Atreus, Impulsive Son`), The Last of
-Us (`Abby, Merciless Soldier`), Arcane (`Aisha of Sparks and Smoke`). The
-override file is the only route by which those franchises ever appear on the
-site. It ships empty and is filled in over time; until then the gap is visible
-rather than silent.
+- **30 were Universes Within cards**, removed by the exclusion above.
+- **28 are real IPs with no set of their own**, resolved by the override file:
+  Sonic (7 — Sonic, Tails, Knuckles, Amy Rose, Shadow, Dr. Eggman, Super State),
+  Doctor Who (5 native Secret Lair legends), Fallout (3 — Lucy MacLean,
+  The Ghoul, Maximus), The Last of Us (4), God of War (2 Kratos + Atreus),
+  Marvel (Deadpool), plus one each for Horizon, Ghost of Tsushima, Tomb Raider,
+  Uncharted, and Jaws.
+
+The override franchise strings are curated: `Maximus, Knight Apparent` is Fallout
+(Secret Lair × Fallout "Beyond Vault 33"), Deadpool folds into Marvel per the
+Marvel decision, and single-card IPs get their own franchise, consistent with
+Star Trek and Clue.
 
 ## Search syntax
 
@@ -199,7 +250,7 @@ field, and the relative weights stay as they are.
 
 ## API
 
-- `GET /api/franchises` — counts over `franchises`. Returns 14 rows.
+- `GET /api/franchises` — counts over `franchises`. Returns 21 rows.
 - `GET /api/sets` — **new**. Counts over `set_names`. Returns 39 rows. This is
   the old `/api/franchises` behavior under an honest name.
 
@@ -208,7 +259,7 @@ Both keep the existing shape: `{"franchises": [{"name": ..., "count": ...}]}` an
 
 ## Frontend
 
-- `/franchises` keeps its route. Now lists the 14 franchises, each linking to
+- `/franchises` keeps its route. Now lists the 21 franchises, each linking to
   `/search?q=fr:"<name>"`.
 - `/sets` is new. The current franchises page markup verbatim, listing the 39
   sets, each linking to `/search?q=set:"<name>"`.
@@ -248,8 +299,13 @@ franchise is the stable label.
 - `order=franchise` and `order=set`.
 
 `backend/tests/test_cards_api.py`
-- `/api/franchises` returns 14 rows; `/api/sets` returns 39.
+- `/api/franchises` returns 21 rows and includes none named `Unassigned`;
+  `/api/sets` returns 39.
 - Response shapes.
+
+`scripts/tests/test_normalize.py` (exclusion)
+- A print in set `slx` is dropped; a card whose every print is `slx` is excluded
+  entirely.
 
 `backend/tests/test_suggest.py` and `test_suggest_api.py`
 - A description naming a franchise scores it once, not once per set. This is the
@@ -262,9 +318,15 @@ Existing fixtures in `backend/tests/conftest.py` and
 
 ## Migration
 
-There is nothing to migrate. `cards.json` is regenerated by the sync script.
+`cards.json` **must be regenerated** by the sync script, not hand-edited. The
+shipped snapshot is stale: it predates Scryfall's `Universes Within` split and
+still records those 30 cards as `Secret Lair Drop`. Only a re-sync both removes
+them and stamps the new `set_names` / `franchises` fields. A test asserts the
+regenerated snapshot contains 3061 cards and no `slx` prints.
+
 Reskins, users, and sessions key off `oracle_id` and are untouched. The Mongo
-schema does not change.
+schema does not change. The 28 override entries and both data files are keyed by
+`oracle_id`, which is stable across the re-sync.
 
 `ub_franchises` is removed outright rather than aliased. Keeping a field whose
 meaning silently changed would be a trap for any cached or forked copy of the
