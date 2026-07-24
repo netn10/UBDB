@@ -41,7 +41,8 @@ export interface UbCard {
   layout: string | null;
   rarity: string | null;
   released_at: string | null;
-  ub_franchises: string[];
+  set_names: string[];
+  franchises: string[];
   official_uw_image: string | null;
   art_uri: string | null;
   prints: Print[];

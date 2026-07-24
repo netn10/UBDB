@@ -105,11 +105,20 @@ export default function CardPage({ params }: { params: { id: string } }) {
         </button>
       </div>
 
-      <p className="mb-4 flex flex-wrap gap-2 text-sm">
-        {card.ub_franchises.map((f) => (
+      <p className="mb-2 flex flex-wrap gap-2 text-sm">
+        {card.franchises.map((f) => (
           <Link key={f} href={`/search?q=${encodeURIComponent(`fr:"${f}"`)}`}
                 className="rounded-card bg-gold/15 px-3 py-1 font-mono text-xs uppercase tracking-wide text-gold hover:bg-gold/25">
             {f}
+          </Link>
+        ))}
+      </p>
+
+      <p className="mb-4 flex flex-wrap gap-2 text-sm">
+        {card.set_names.map((s) => (
+          <Link key={s} href={`/search?q=${encodeURIComponent(`set:"${s}"`)}`}
+                className="rounded-card border border-gold/25 px-3 py-1 font-mono text-xs uppercase tracking-wide text-ink/50 hover:border-gold hover:text-gold dark:text-ink-dark/40">
+            {s}
           </Link>
         ))}
       </p>

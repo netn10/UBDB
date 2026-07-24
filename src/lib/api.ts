@@ -52,6 +52,11 @@ export async function getFranchises(): Promise<{ name: string; count: number }[]
   return body.franchises;
 }
 
+export async function getSets(): Promise<{ name: string; count: number }[]> {
+  const body = await get<{ sets: { name: string; count: number }[] }>("/sets");
+  return body.sets;
+}
+
 export async function getRandom(): Promise<string> {
   const body = await get<{ oracle_id: string }>("/random");
   return body.oracle_id;

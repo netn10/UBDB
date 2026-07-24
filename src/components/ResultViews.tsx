@@ -82,7 +82,7 @@ export default function ResultViews({ cards, view }: { cards: UbCard[]; view: Vi
             <ManaCost cost={c.mana_cost} />
             <span className="truncate text-ink/60 dark:text-ink-dark/50">{c.type_line}</span>
             <span className="ml-auto shrink-0 font-mono text-xs uppercase tracking-wide text-ink/40 dark:text-ink-dark/30">
-              {c.ub_franchises[0]}
+              {c.franchises[0]}
             </span>
           </li>
         ))}
