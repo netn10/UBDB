@@ -13,6 +13,8 @@
   "Final Fantasy": "Final Fantasy",
   "Final Fantasy Commander": "Final Fantasy",
   "Final Fantasy Promos": "Final Fantasy",
+  "Final Fantasy Regional Promos": "Final Fantasy",
+  "Final Fantasy: Through the Ages": "Final Fantasy",
 
   "Jurassic World Collection": "Jurassic World",
 
@@ -33,10 +35,13 @@
 
   "Ravnica: Clue Edition": "Clue",
 
+  "Star Trek": "Star Trek",
   "Star Trek Commander": "Star Trek",
+  "Stardates": "Star Trek",
 
   "Teenage Mutant Ninja Turtles": "Teenage Mutant Ninja Turtles",
   "Teenage Mutant Ninja Turtles Eternal": "Teenage Mutant Ninja Turtles",
+  "Teenage Mutant Ninja Turtles Source Material": "Teenage Mutant Ninja Turtles",
 
   "Transformers": "Transformers",
 
@@ -44,11 +49,14 @@
 
   "MagicFest 2023": null,
   "MagicFest 2025": null,
+  "MagicFest 2026": null,
   "Media and Collaboration Promos": null,
   "Pro Tour Promos": null,
   "Secret Lair Drop": null,
   "Spotlight Series": null,
+  "Store Championships": null,
   "URL/Convention Promos": null,
+  "Wizards Play Network 2023": null,
   "Wizards Play Network 2025": null,
   "Wizards Play Network 2026": null
 }

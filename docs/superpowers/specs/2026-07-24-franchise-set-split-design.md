@@ -78,7 +78,7 @@ is documentation for the human reader; only `franchise` is read at sync time.
 { "<oracle_id>": { "name": "Sonic the Hedgehog", "franchise": "Sonic the Hedgehog" } }
 ```
 
-It ships **populated** with 28 entries covering every card that would otherwise
+It ships **populated** with 60 entries covering every card that would otherwise
 be unresolved (see The Unassigned bucket below), so the site launches with no
 `Unassigned` cards.
 
@@ -103,63 +103,87 @@ If `cards.json` contains a set name absent from `set_map.json`, the sync script
 **fails loudly** rather than defaulting. A new Universes Beyond set must be
 mapped deliberately. This is enforced by a test, not only at sync time.
 
-## Universes Within exclusion
+## Universes Within: naming, not exclusion
 
-Investigation of the unresolved cards surfaced a separate data-quality problem.
-Thirty cards in the current snapshot are not Universes Beyond at all — they are
-**Universes Within** cards, the official MTG-native counterparts Wizards prints
-for UB cards. `Greymond, Avacyn's Stalwart` is the in-universe version of a
-Warhammer card; this site exists to collect *community* reskins of UB cards, so
-the official native versions do not belong in the catalog.
+> **Corrected 2026-07-24 during implementation.** An earlier draft of this
+> section claimed these ~30 cards were not Universes Beyond and should be
+> dropped. That was wrong, and the error is instructive enough to record.
 
-They entered the snapshot by accident of timing. Scryfall originally filed them
-under `Secret Lair Drop` (`sld`, which is `is:ub`); it has since moved them into
-a dedicated `Universes Within` set (code `slx`, **not** `is:ub`). Our snapshot
-predates that move and still records them as `sld`.
+Wizards prints two versions of some Secret Lair UB cards: the Universes Beyond
+card itself (in `sld`) and an official MTG-native reskin, **Universes Within**
+(in `slx`). Scryfall models the pair on one card object, and its `name` field
+returns the *Universes Within* name while `printed_name` holds the name actually
+printed on the UB card:
 
-The fix is a re-sync. The sync query `is:ub game:paper` no longer matches `slx`
-cards, so **re-running the sync drops all 30 automatically** — card count goes
-3091 → 3061. As defensive insurance against Scryfall re-tagging, the sync also
-explicitly excludes set code `slx`:
-
-```python
-UNIVERSES_WITHIN = {"slx"}
-prints = [p for p in prints if p["set"] not in UNIVERSES_WITHIN]
-if not prints:
-    continue
+```
+name          "Greymond, Avacyn's Stalwart"     <- Universes Within
+printed_name  "Rick, Steadfast Leader"          <- the actual UB card
 ```
 
-Because the shipped snapshot is stale, **the implementation must re-sync
-`cards.json`** as part of this work; editing the data files alone is not enough
-to remove these 30 cards.
+Reading only `name` makes a Walking Dead card look like an Innistrad legend,
+which is exactly how the first draft came to the wrong conclusion. The `slx`
+printings genuinely are out of scope; the `sld` printings are core catalog data.
 
-The dead `official_uw_image` field (populated on 0 of 3091 cards) was clearly
-intended to link a UB card to its Universes Within counterpart and was never
-wired up. Doing so is out of scope here and noted as a follow-up.
+Two consequences:
+
+1. **Exclude the `slx` set, keep the cards.** The sync drops `slx` prints. A
+   card whose every print is `slx` is dropped entirely; a card with an `sld`
+   print stays.
+
+   ```python
+   UNIVERSES_WITHIN = {"slx"}
+   prints = [p for p in prints if p["set"] not in UNIVERSES_WITHIN]
+   if not prints:
+       continue
+   ```
+
+2. **Prefer `printed_name` for the card's name.** The sync stores the printed UB
+   name as `name` and keeps the counterpart as `universes_within_name` (null for
+   the vast majority of cards). Without this the site would label 31 cards with
+   MTG-native names their players have never seen.
+
+   ```python
+   printed = printed_names.get(card["oracle_id"])
+   card["universes_within_name"] = card["name"] if printed else None
+   if printed:
+       card["name"] = printed
+   ```
+
+These cards are the four original Secret Lair crossovers, resolved by override:
+Street Fighter (8), Stranger Things (9), Dungeons & Dragons (7), The Walking
+Dead (6), plus Star Trek and Stardew Valley singletons.
+
+`official_uw_image` remains dead (0 cards populated). `universes_within_name` now
+gives it a natural partner; wiring up the image is still out of scope.
 
 ## Franchise list
 
-Twenty-one franchises after the overrides and the Universes Within exclusion.
-Counts are cards over the 3061-card snapshot and do not sum to the total because
-12 cards belong to more than one franchise. There are no `Unassigned` cards.
+Twenty-six franchises over a 3175-card snapshot. Counts do not sum to the total
+because some cards belong to more than one franchise. There are no `Unassigned`
+cards.
+
+The numbers below are higher than earlier drafts because the re-sync picked up
+eight sets the stale snapshot predated (Star Trek, Stardates, Final Fantasy:
+Through the Ages, FF Regional Promos, TMNT Source Material, MagicFest 2026,
+Store Championships, WPN 2023) — the fail-loud totality guard caught every one.
 
 | Franchise | Cards | | Franchise | Cards |
 |---|--:|---|---|--:|
-| Marvel | 879 | | Clue | 16 |
-| Final Fantasy | 431 | | Transformers | 15 |
+| Marvel | 879 | | Transformers | 15 |
+| Middle-earth | 450 | | Stranger Things | 9 |
+| Final Fantasy | 431 | | Street Fighter | 8 |
 | Avatar: The Last Airbender | 414 | | Sonic the Hedgehog | 7 |
-| Middle-earth | 394 | | The Last of Us | 4 |
-| Teenage Mutant Ninja Turtles | 260 | | God of War | 3 |
-| Doctor Who | 194 | | Horizon | 1 |
-| Warhammer 40,000 | 168 | | Star Trek | 1 |
-| Fallout | 157 | | Jaws | 1 |
-| Assassin's Creed | 105 | | Ghost of Tsushima | 1 |
-| Jurassic World | 20 | | Tomb Raider | 1 |
-| | | | Uncharted | 1 |
+| Teenage Mutant Ninja Turtles | 260 | | Dungeons & Dragons | 7 |
+| Doctor Who | 194 | | The Walking Dead | 6 |
+| Warhammer 40,000 | 168 | | The Last of Us | 4 |
+| Fallout | 157 | | God of War | 3 |
+| Assassin's Creed | 105 | | Horizon / Jaws / Tomb Raider | 1 each |
+| Star Trek | 28 | | Ghost of Tsushima / Uncharted | 1 each |
+| Jurassic World | 20 | | Stardew Valley | 1 |
+| Clue | 16 | | | |
 
-The eight small franchises below Transformers, plus the bumps to Marvel (+1
-Deadpool), Doctor Who (+5) and Fallout (+3), come entirely from the override
-file.
+The small franchises from Stranger Things down, plus the bumps to Marvel,
+Doctor Who and Fallout, come entirely from the 60-entry override file.
 
 ### Curation decisions
 
@@ -250,7 +274,7 @@ field, and the relative weights stay as they are.
 
 ## API
 
-- `GET /api/franchises` — counts over `franchises`. Returns 21 rows.
+- `GET /api/franchises` — counts over `franchises`. Returns 26 rows.
 - `GET /api/sets` — **new**. Counts over `set_names`. Returns 39 rows. This is
   the old `/api/franchises` behavior under an honest name.
 
@@ -259,7 +283,7 @@ Both keep the existing shape: `{"franchises": [{"name": ..., "count": ...}]}` an
 
 ## Frontend
 
-- `/franchises` keeps its route. Now lists the 21 franchises, each linking to
+- `/franchises` keeps its route. Now lists the 26 franchises, each linking to
   `/search?q=fr:"<name>"`.
 - `/sets` is new. The current franchises page markup verbatim, listing the 39
   sets, each linking to `/search?q=set:"<name>"`.
@@ -299,8 +323,8 @@ franchise is the stable label.
 - `order=franchise` and `order=set`.
 
 `backend/tests/test_cards_api.py`
-- `/api/franchises` returns 21 rows and includes none named `Unassigned`;
-  `/api/sets` returns 39.
+- `/api/franchises` includes no row named `Unassigned`; `/api/sets` lists set
+  names. Both assert shape against the hermetic conftest sample, not live counts.
 - Response shapes.
 
 `scripts/tests/test_normalize.py` (exclusion)
@@ -319,10 +343,14 @@ Existing fixtures in `backend/tests/conftest.py` and
 ## Migration
 
 `cards.json` **must be regenerated** by the sync script, not hand-edited. The
-shipped snapshot is stale: it predates Scryfall's `Universes Within` split and
-still records those 30 cards as `Secret Lair Drop`. Only a re-sync both removes
-them and stamps the new `set_names` / `franchises` fields. A test asserts the
-regenerated snapshot contains 3061 cards and no `slx` prints.
+shipped snapshot was stale by eight sets and predated the `Universes Within`
+split. Only a re-sync removes `slx` prints, applies `printed_name`, and stamps
+`set_names` / `franchises`.
+
+`scripts/tests/test_snapshot_invariants.py` guards the committed snapshot on
+structure rather than a hardcoded card count: new fields present, `ub_franchises`
+absent, no `slx` prints, `set_map` total, and zero `Unassigned`. The count tracks
+live Scryfall and would rot; the invariants will not.
 
 Reskins, users, and sessions key off `oracle_id` and are untouched. The Mongo
 schema does not change. The 28 override entries and both data files are keyed by

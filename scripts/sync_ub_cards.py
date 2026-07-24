@@ -126,10 +126,17 @@ def _face_or_top(raw: dict, key):
 def group_prints(raw_cards: list) -> list:
     """Group Scryfall printings by oracle_id into ub_card records."""
     by_oracle = {}
+    # Scryfall's `name` for a Secret Lair UB card is its Universes Within
+    # (MTG-native) name; `printed_name` is the name actually on the card, e.g.
+    # name "Greymond, Avacyn's Stalwart" / printed_name "Rick, Steadfast
+    # Leader". Prefer the printed name and keep the other for reference.
+    printed_names = {}
     for raw in raw_cards:
         oid = raw.get("oracle_id")
         if not oid:
             continue  # cards without a stable oracle_id can't be anchored
+        if raw.get("printed_name"):
+            printed_names.setdefault(oid, raw["printed_name"])
         card = by_oracle.get(oid)
         if card is None:
             colors = _face_or_top(raw, "colors")
@@ -170,6 +177,10 @@ def group_prints(raw_cards: list) -> list:
         # such counterpart.
         if not any(p["reprint"] is False for p in prints):
             continue
+        printed = printed_names.get(card["oracle_id"])
+        card["universes_within_name"] = card["name"] if printed else None
+        if printed:
+            card["name"] = printed
         card["set_names"] = sorted({p["set_name"] for p in prints if p["set_name"]})
         card["franchises"] = franchise_map.resolve_franchises(
             card["set_names"], card["oracle_id"], set_map, overrides)

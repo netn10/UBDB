@@ -43,6 +43,9 @@ export interface UbCard {
   released_at: string | null;
   set_names: string[];
   franchises: string[];
+  /** MTG-native name of this card's official Universes Within counterpart,
+   *  e.g. "Greymond, Avacyn's Stalwart" for "Rick, Steadfast Leader". */
+  universes_within_name: string | null;
   official_uw_image: string | null;
   art_uri: string | null;
   prints: Print[];
