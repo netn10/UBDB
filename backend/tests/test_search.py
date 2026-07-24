@@ -6,27 +6,30 @@ CARDS = [
         "oracle_text": "Flying. Whenever Aang attacks", "type_line": "Legendary Creature — Monk",
         "colors": ["W", "U"], "color_identity": ["U", "W"], "cmc": 4.0,
         "power": "3", "toughness": "4", "loyalty": None, "rarity": "mythic",
-        "keywords": ["Flying"], "ub_franchises": ["Avatar: The Last Airbender"],
+        "keywords": ["Flying"], "franchises": ["Avatar: The Last Airbender"],
+        "set_names": ["Avatar: The Last Airbender"],
         "released_at": "2025-11-21",
-        "prints": [{"set": "tla"}],
+        "prints": [{"set": "tla", "set_name": "Avatar: The Last Airbender"}],
     },
     {
         "oracle_id": "o-bolt", "name": "Lightning Bolt",
         "oracle_text": "Deal 3 damage to any target.", "type_line": "Instant",
         "colors": ["R"], "color_identity": ["R"], "cmc": 1.0,
         "power": None, "toughness": None, "loyalty": None, "rarity": "common",
-        "keywords": [], "ub_franchises": ["Warhammer 40,000"],
+        "keywords": [], "franchises": ["Warhammer 40,000"],
+        "set_names": ["Warhammer 40,000 Commander"],
         "released_at": "2022-10-07",
-        "prints": [{"set": "40k"}],
+        "prints": [{"set": "40k", "set_name": "Warhammer 40,000 Commander"}],
     },
     {
         "oracle_id": "o-wall", "name": "Stone Wall",
         "oracle_text": "Defender", "type_line": "Creature — Wall",
         "colors": [], "color_identity": [], "cmc": 2.0,
         "power": "*", "toughness": "5", "loyalty": None, "rarity": "uncommon",
-        "keywords": ["Defender"], "ub_franchises": ["Fallout"],
+        "keywords": ["Defender"], "franchises": ["Fallout"],
+        "set_names": ["Fallout"],
         "released_at": "2024-03-08",
-        "prints": [{"set": "pip"}],
+        "prints": [{"set": "pip", "set_name": "Fallout"}],
     },
 ]
 
@@ -97,6 +100,29 @@ def test_rarity_exact_and_order():
 
 def test_set_operator():
     assert _names("set:40k") == ["Lightning Bolt"]
+
+
+def test_set_operator_matches_set_name_substring():
+    # set: now also matches a substring of the card's set names, not just code.
+    assert _names('set:"warhammer"') == ["Lightning Bolt"]
+
+
+def test_set_name_substring_does_not_match_the_franchise_field():
+    # Lightning Bolt's franchise is "Warhammer 40,000" but its set name is
+    # "Warhammer 40,000 Commander". set: matches the set, fr: the franchise.
+    assert _names('set:"commander"') == ["Lightning Bolt"]
+    assert _names('fr:"commander"') == []
+
+
+def test_order_by_set_name():
+    # Alphabetical by first set name: Avatar, Fallout, Warhammer 40,000 Cmdr.
+    assert _names("", order="set") == [
+        "Aang, Airbending Master", "Stone Wall", "Lightning Bolt"]
+
+
+def test_order_by_franchise():
+    assert _names("", order="franchise") == [
+        "Aang, Airbending Master", "Stone Wall", "Lightning Bolt"]
 
 
 def test_franchise_operator_quoted():

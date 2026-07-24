@@ -147,9 +147,16 @@ def _name_pred(value):
 
 
 def _set_pred(value):
+    # Matches an exact set code (set:tla) or a substring of a set name
+    # (set:"final fantasy commander").
     want = value.lower()
-    return lambda card: any((p.get("set") or "").lower() == want
-                            for p in card.get("prints", []))
+
+    def pred(card):
+        if any((p.get("set") or "").lower() == want
+               for p in card.get("prints", [])):
+            return True
+        return any(want in (s or "").lower() for s in card.get("set_names", []))
+    return pred
 
 
 def _franchise_pred(value):
@@ -157,7 +164,7 @@ def _franchise_pred(value):
     # colliding with commas inside franchise names like "Warhammer 40,000".
     needles = [v.strip().lower() for v in value.split("|") if v.strip()]
     return lambda card: any(n in (f or "").lower()
-                            for f in card.get("ub_franchises", [])
+                            for f in card.get("franchises", [])
                             for n in needles)
 
 
@@ -256,7 +263,9 @@ def _sort_key(order):
     if order == "released":
         return lambda c: (c.get("released_at") or "", (c.get("name") or "").lower())
     if order == "franchise":
-        return lambda c: ((c.get("ub_franchises") or [""])[0], (c.get("name") or "").lower())
+        return lambda c: ((c.get("franchises") or [""])[0], (c.get("name") or "").lower())
+    if order == "set":
+        return lambda c: ((c.get("set_names") or [""])[0], (c.get("name") or "").lower())
     return lambda c: (c.get("name") or "").lower()
 
 
