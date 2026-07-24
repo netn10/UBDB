@@ -1,5 +1,5 @@
 "use client";
-import { Suspense, useState, useCallback } from "react";
+import { Suspense, use, useState, useCallback } from "react";
 import useSWR from "swr";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
@@ -192,17 +192,18 @@ function SuggestForm({ oracleId }: { oracleId: string }) {
   );
 }
 
-export default function SuggestPage({ params }: { params: { id: string } }) {
+export default function SuggestPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = use(params);
   return (
     <main className="py-8">
-      <Link href={`/card/${params.id}`} className="font-display text-sm uppercase tracking-wide text-ink/60 hover:text-gold dark:text-ink-dark/50">
+      <Link href={`/card/${id}`} className="font-display text-sm uppercase tracking-wide text-ink/60 hover:text-gold dark:text-ink-dark/50">
         ← Back to card
       </Link>
       <h1 className="mb-6 mt-3 font-display text-2xl font-black uppercase tracking-[0.15em] text-gold dark:text-gold-dark">
         Suggest a design
       </h1>
       <Suspense fallback={<p className="font-mono text-sm text-ink/50">Loading…</p>}>
-        <SuggestForm oracleId={params.id} />
+        <SuggestForm oracleId={id} />
       </Suspense>
     </main>
   );

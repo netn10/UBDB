@@ -1,6 +1,7 @@
 "use client";
 import Link from "next/link";
 import useSWR from "swr";
+import { use } from "react";
 import { useRouter } from "next/navigation";
 import { getCard, getReskins, getRandom, getImageSrc, cardKey, reskinsKey } from "@/lib/api";
 import { CardFace, Reskin } from "@/types/types";
@@ -75,10 +76,11 @@ function FaceDetails({ name, mana_cost, type_line, oracle_text, power, toughness
   );
 }
 
-export default function CardPage({ params }: { params: { id: string } }) {
+export default function CardPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = use(params);
   const router = useRouter();
-  const { data: card, error } = useSWR(cardKey(params.id), () => getCard(params.id));
-  const { data: reskins = [] } = useSWR(reskinsKey(params.id), () => getReskins(params.id));
+  const { data: card, error } = useSWR(cardKey(id), () => getCard(id));
+  const { data: reskins = [] } = useSWR(reskinsKey(id), () => getReskins(id));
 
   if (error) return <main className="py-10 font-body">Card not found.</main>;
   if (!card) return <main className="py-10 font-mono text-sm text-ink/50 dark:text-ink-dark/40">Loading…</main>;
