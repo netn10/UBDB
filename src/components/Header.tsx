@@ -117,6 +117,7 @@ export default function Header() {
           </Suspense>
           <nav className="ml-auto hidden shrink-0 items-center gap-4 whitespace-nowrap text-sm font-display uppercase tracking-wider sm:flex">
             <Link href="/franchises" className="hover:text-gold">Franchises</Link>
+            <Link href="/sets" className="hover:text-gold">Sets</Link>
             <Link href="/decklist" className="hover:text-gold">Decklist</Link>
             <RandomLink />
             <Link href="/advanced" className="hover:text-gold">Advanced</Link>

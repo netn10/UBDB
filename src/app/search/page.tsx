@@ -7,7 +7,7 @@ import ResultViews, { ViewMode } from "@/components/ResultViews";
 import { useSettings, writeSettings } from "@/lib/settings";
 import { parseCi } from "@/lib/colors";
 
-const ORDERS = ["name", "cmc", "rarity", "released", "franchise"];
+const ORDERS = ["name", "cmc", "rarity", "released", "franchise", "set"];
 
 function pill(active: boolean) {
   return `rounded-card px-2.5 py-1 text-sm transition ${
