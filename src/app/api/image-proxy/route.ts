@@ -4,6 +4,7 @@ const PLACEHOLDER = `<svg xmlns="http://www.w3.org/2000/svg" width="265" height=
 
 // Only proxy known Scryfall image hosts; this is a public CORS proxy endpoint,
 // so it must not act as an open SSRF relay to arbitrary/internal URLs.
+const MAX_BYTES = 10 * 1024 * 1024; // 10 MB cap on proxied images
 const ALLOWED_HOSTS = ["cards.scryfall.io", "c1.scryfall.com", "c2.scryfall.com", "svgs.scryfall.io"];
 
 function isAllowed(raw: string): boolean {
@@ -31,19 +32,26 @@ export async function GET(request: NextRequest) {
         Accept: "image/*,*/*;q=0.8",
         Referer: "https://scryfall.com/",
       },
+      redirect: "manual", // never follow a redirect off the allowlisted host
       signal: AbortSignal.timeout(15000),
     });
-    if (!response.ok) {
+    const contentType = response.headers.get("content-type") || "";
+    const declaredLen = Number(response.headers.get("content-length") || 0);
+    // Only serve a real, in-budget image; anything else falls back to the placeholder.
+    const buf =
+      response.ok && contentType.startsWith("image/") && declaredLen <= MAX_BYTES
+        ? await response.arrayBuffer()
+        : null;
+    if (!buf || buf.byteLength > MAX_BYTES) {
       return new NextResponse(PLACEHOLDER, {
         status: 200,
         headers: { "Content-Type": "image/svg+xml", "Cache-Control": "public, max-age=86400" },
       });
     }
-    const buf = await response.arrayBuffer();
     return new NextResponse(buf, {
       status: 200,
       headers: {
-        "Content-Type": response.headers.get("content-type") || "image/jpeg",
+        "Content-Type": contentType || "image/jpeg",
         "Cache-Control": "public, max-age=86400",
       },
     });

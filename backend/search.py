@@ -3,10 +3,13 @@ applies them (implicit AND) to enriched card dicts, then sorts and paginates.
 """
 import re
 
+import re2  # RE2: linear-time regex for user-supplied search patterns (ReDoS-safe)
+
 RARITY_RANK = {"common": 0, "uncommon": 1, "rare": 2, "mythic": 3,
                "special": 4, "bonus": 5}
 COLOR_LETTERS = set("WUBRG")
 OP_RE = re.compile(r"^([a-zA-Z]+)(>=|<=|!=|=|:|>|<)(.*)$")
+_MAX_REGEX = 200  # reject absurdly long user regex patterns
 
 
 def tokenize(q):
@@ -133,9 +136,15 @@ def _text_pred(card_key, value):
     Returns (predicate, warning); warning set only for an invalid regex.
     """
     if len(value) >= 2 and value[0] == "/" and value[-1] == "/":
+        pattern = value[1:-1]
+        if len(pattern) > _MAX_REGEX:
+            return None, f"regex too long (max {_MAX_REGEX} chars)"
         try:
-            rx = re.compile(value[1:-1], re.IGNORECASE)
-        except re.error as e:
+            # RE2 matches in linear time, so a hostile pattern like /(a+)+$/ can't
+            # trigger catastrophic backtracking (ReDoS) on this public endpoint.
+            # It's the same engine Scryfall uses; (?i) = case-insensitive.
+            rx = re2.compile("(?i)" + pattern)
+        except re2.error as e:
             return None, f"invalid regex: {value} ({e})"
         return (lambda card: rx.search(card.get(card_key) or "") is not None), None
     return _substr_pred(card_key, value), None
