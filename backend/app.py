@@ -9,6 +9,9 @@ from functools import wraps
 
 from flask import Flask, jsonify, request
 from flask_cors import CORS
+from flask_limiter import Limiter
+from flask_limiter.util import get_remote_address
+from werkzeug.middleware.proxy_fix import ProxyFix
 from pymongo.errors import PyMongoError
 
 import search as search_engine
@@ -17,7 +20,26 @@ import auth
 from suggest import score_cards
 
 app = Flask(__name__)
-CORS(app)
+# Cap request bodies so the unauthenticated write endpoints can't be used to
+# exhaust worker memory; oversized requests get a 413.
+app.config["MAX_CONTENT_LENGTH"] = 64 * 1024
+
+# Behind Heroku's router: trust one proxy hop so the real client IP (not the
+# router) drives rate limiting and logging.
+app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1)
+
+# The frontend is same-origin (Next proxies /api), so no wildcard CORS. Only
+# origins in UBDB_CORS_ORIGINS (comma-separated) may call cross-origin; localhost
+# is allowed for dev. Admin routes are never meant to be reachable cross-origin.
+_cors_origins = [o.strip() for o in os.getenv("UBDB_CORS_ORIGINS", "").split(",") if o.strip()]
+_cors_origins += ["http://localhost:3000", "http://127.0.0.1:3000"]
+CORS(app, resources={r"/api/*": {"origins": _cors_origins}})
+
+# Per-IP rate limiting (in-memory: per-worker, a fine basic brake here).
+# Disabled under the test mock so the suite isn't throttled.
+app.config["RATELIMIT_ENABLED"] = not bool(os.getenv("UBDB_MONGO_MOCK"))
+limiter = Limiter(get_remote_address, app=app,
+                  default_limits=["600 per hour"], storage_uri="memory://")
 
 _HERE = os.path.dirname(os.path.abspath(__file__))
 _DEFAULT_CARDS = os.path.join(_HERE, "..", "data", "ub_cards", "cards.json")
@@ -130,6 +152,7 @@ _STYLES = {"name-bottom", "nickname-bar", "code"}
 
 
 @app.post("/api/cards/<oracle_id>/reskins")
+@limiter.limit("20 per hour")
 @mongo_guarded
 def submit_reskin(oracle_id):
     """Accept a community reskin submission. Lands unapproved; image is a
@@ -138,17 +161,17 @@ def submit_reskin(oracle_id):
         return jsonify({"error": "not found"}), 404
     body = request.get_json(silent=True) or {}
 
-    name = (body.get("reskin_name") or "").strip()
+    name = (body.get("reskin_name") or "").strip()[:200]
     image = (body.get("image_url") or "").strip()
-    designer = (body.get("designer_name") or "").strip()
+    designer = (body.get("designer_name") or "").strip()[:100]
     if not name or not image or not designer:
         return jsonify({"error": "reskin_name, image_url and designer_name are required"}), 400
-    if not image.lower().startswith(("http://", "https://")):
-        return jsonify({"error": "image_url must be an http(s) link"}), 400
+    if len(image) > 2048 or not image.lower().startswith(("http://", "https://")):
+        return jsonify({"error": "image_url must be an http(s) link under 2048 chars"}), 400
 
     art_source = (body.get("art_source") or "original").strip().lower()
     style = (body.get("style") or "name-bottom").strip().lower()
-    tags = [t.strip() for t in (body.get("tags") or []) if isinstance(t, str) and t.strip()]
+    tags = [t.strip()[:40] for t in (body.get("tags") or []) if isinstance(t, str) and t.strip()][:20]
     try:
         face = int(body.get("face", 0))
     except (TypeError, ValueError):
@@ -161,7 +184,7 @@ def submit_reskin(oracle_id):
         "designer_name": designer,
         "reskin_name": name,
         "image_url": image,
-        "art_credit": (body.get("art_credit") or "").strip(),
+        "art_credit": (body.get("art_credit") or "").strip()[:200],
         "art_source": art_source if art_source in _ART_SOURCES else "original",
         "style": style if style in _STYLES else "name-bottom",
         "tags": tags,
@@ -195,9 +218,10 @@ def search_cards():
 
 
 @app.post("/api/suggest")
+@limiter.limit("60 per hour")
 def suggest_reskin():
     payload = request.get_json(silent=True) or {}
-    description = (payload.get("description") or "").strip()
+    description = (payload.get("description") or "").strip()[:1000]
     if not description:
         return jsonify({"error": "description required"}), 400
     facets = payload.get("facets") if isinstance(payload.get("facets"), dict) else None
@@ -208,6 +232,7 @@ def suggest_reskin():
 
 
 @app.post("/api/auth/login")
+@limiter.limit("10 per minute")
 @mongo_guarded
 def login():
     body = request.get_json(silent=True) or {}
@@ -280,12 +305,13 @@ def admin_reject(rid):
 
 
 @app.post("/api/resolve")
+@limiter.limit("60 per hour")
 @mongo_guarded
 def resolve_decklist():
     """Resolve decklist names to cards + approved reskins.
     Body: {"names": [{"name", "qty"}]}. Unmatched come back card=null."""
     body = request.get_json(silent=True) or {}
-    entries = body.get("names") or []
+    entries = (body.get("names") or [])[:200]
     results = []
     for entry in entries:
         if isinstance(entry, str):
