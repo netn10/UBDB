@@ -1,6 +1,6 @@
 # UBDB
 
-A browsable database of Magic: The Gathering *Universes Beyond* cards. On top of the card data it collects community "reskins": proposals that re-theme a UB card back into its original franchise, or into a different one. Card data comes from Scryfall. The reskins and admin accounts live in MongoDB.
+A browsable database of Magic: The Gathering *Universes Beyond* cards. On top of the card data it collects community "reskins": proposals that re-theme a UB card back into a UW one.
 
 Stack:
 
