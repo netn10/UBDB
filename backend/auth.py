@@ -1,5 +1,5 @@
 """Admin auth: password hashing, env bootstrap, sessions, request guard.
-Admins only for now — no public signup."""
+Admins only for now; no public signup."""
 import os
 import secrets
 from datetime import datetime, timedelta, timezone
@@ -19,7 +19,7 @@ def _now():
 
 def bootstrap_admin() -> None:
     """If UBDB_ADMIN_USER/PASS are set and that username has no user doc,
-    insert it as an admin. Idempotent — safe on every boot."""
+    insert it as an admin. Idempotent, safe on every boot."""
     username = os.getenv("UBDB_ADMIN_USER")
     password = os.getenv("UBDB_ADMIN_PASS")
     if not username or not password:

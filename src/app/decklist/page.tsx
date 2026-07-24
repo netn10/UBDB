@@ -131,7 +131,7 @@ export default function DecklistPage() {
         )}
         {dupImages.size > 0 && (
           <p className="rounded-card border border-gold/50 bg-gold/10 px-3 py-2 font-body text-sm">
-            ⚠ Some cards share the same art — you may want distinct versions before printing.
+            ⚠ Some cards share the same art. You may want distinct versions before printing.
           </p>
         )}
 
@@ -150,7 +150,7 @@ export default function DecklistPage() {
                   <span className="font-medium">{r.card!.name}</span>
                   {r.reskins.length === 0 && (
                     <Link href={`/card/${r.card!.oracle_id}/suggest`} className="ml-auto font-mono text-xs text-gold hover:underline">
-                      no reskin — suggest one →
+                      no reskin, suggest one →
                     </Link>
                   )}
                 </div>

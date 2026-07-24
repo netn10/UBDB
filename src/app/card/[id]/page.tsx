@@ -25,7 +25,7 @@ function ReskinSection({ oracleId, reskins, face }: { oracleId: string; reskins:
       {ordered.length === 0 ? (
         <div className="rounded-card border border-dashed border-gold/30 p-6 text-center">
           <p className="font-body italic text-ink/55 dark:text-ink-dark/50">
-            No reskin yet — be the first to suggest one.
+            No reskin yet. Be the first to suggest one.
           </p>
         </div>
       ) : (

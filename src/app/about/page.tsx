@@ -1,6 +1,6 @@
 import Link from "next/link";
 
-export const metadata = { title: "About — The Omen Archive" };
+export const metadata = { title: "About · The Omen Archive" };
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
@@ -20,7 +20,7 @@ export default function About() {
       </h1>
       <p className="mt-4 max-w-2xl font-body text-lg text-ink/70 dark:text-ink-dark/60">
         A community catalogue of Magic: The Gathering cards and the Universes Beyond
-        reskins that reimagine them — mapping every card to the alternate-universe
+        reskins that reimagine them, mapping every card to the alternate-universe
         designs the community dreams up for it.
       </p>
 
@@ -35,17 +35,17 @@ export default function About() {
       <Section title="How it works">
         <p>Search accepts Scryfall-style filters. A few to try:</p>
         <ul className="space-y-1 font-mono text-sm">
-          <li><span className="text-gold">t:creature</span> — filter by card type</li>
-          <li><span className="text-gold">id:w</span> — filter by color identity</li>
-          <li><span className="text-gold">cmc&lt;=3</span> — filter by mana value</li>
-          <li><span className="text-gold">fr:fallout</span> — filter by franchise (Avatar, Warhammer, Fallout)</li>
-          <li><span className="text-gold">set:tla</span> — filter by set code or name (e.g. set:&quot;final fantasy commander&quot;)</li>
-          <li><span className="text-gold">is:unreskinned</span> — cards with no Universes Within version yet</li>
-          <li><span className="text-gold">reskins&gt;=2</span> — filter by how many reskins a card has</li>
-          <li><span className="text-gold">o:/deal \d+ damage/</span> — regex match on oracle text</li>
+          <li><span className="text-gold">t:creature</span> filter by card type</li>
+          <li><span className="text-gold">id:w</span> filter by color identity</li>
+          <li><span className="text-gold">cmc&lt;=3</span> filter by mana value</li>
+          <li><span className="text-gold">fr:fallout</span> filter by franchise (Avatar, Warhammer, Fallout)</li>
+          <li><span className="text-gold">set:tla</span> filter by set code or name (e.g. set:&quot;final fantasy commander&quot;)</li>
+          <li><span className="text-gold">is:unreskinned</span> cards with no Universes Within version yet</li>
+          <li><span className="text-gold">reskins&gt;=2</span> filter by how many reskins a card has</li>
+          <li><span className="text-gold">o:/deal \d+ damage/</span> regex match on oracle text</li>
         </ul>
         <p>
-          Open any card and its <em>reskins</em> appear beneath it — alternate designs
+          Open any card and its <em>reskins</em> appear beneath it, alternate designs
           with art credits and tags. Hit <Link href="/search" className="text-gold hover:underline">the database</Link>{" "}
           and use “+ Suggest a design” on a card to add your own.
         </p>

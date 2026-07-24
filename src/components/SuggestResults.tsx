@@ -50,7 +50,7 @@ export default function SuggestResults({
 
       {results.length === 0 ? (
         <p className="font-body text-sm text-ink/60 dark:text-ink-dark/50">
-          No strong match — try more descriptive words (a color, a role like
+          No strong match. Try more descriptive words (a color, a role like
           “guardian” or “assassin”, or the franchise name).
         </p>
       ) : (

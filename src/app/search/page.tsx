@@ -20,7 +20,7 @@ function pill(active: boolean) {
 function Masthead() {
   return (
     <p className="mb-6 mt-2 text-center font-body text-sm text-ink/55 dark:text-ink-dark/50">
-      Search by name, type, or color identity — or tap a mana pip above to filter by color.
+      Search by name, type, or color identity, or tap a mana pip above to filter by color.
     </p>
   );
 }
@@ -157,7 +157,7 @@ function Results() {
       {result && <ResultViews cards={result.cards} view={view} />}
       {result && result.cards.length === 0 && (
         <p className="py-12 text-center font-body italic text-ink/50 dark:text-ink-dark/40">
-          {result.total === 0 ? `No cards matched “${q || ci}”.` : "No cards on this page — go back."}
+          {result.total === 0 ? `No cards matched “${q || ci}”.` : "No cards on this page. Go back."}
         </p>
       )}
 

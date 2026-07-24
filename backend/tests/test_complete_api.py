@@ -63,7 +63,7 @@ def _seed_reskins(cc):
          "art_credit": "Artist X", "tags": ["fallout", "ghoul"], "approved": True},
         {"_id": "r2", "oracle_id": "o2", "designer_name": "Ben",
          "art_credit": "Artist Y", "tags": ["ghoul", "flavor"], "approved": True},
-        # unapproved — must NOT appear in any suggestion
+        # unapproved, must NOT appear in any suggestion
         {"_id": "r3", "oracle_id": "o3", "designer_name": "Hidden",
          "art_credit": "Secret", "tags": ["secret"], "approved": False},
     ])

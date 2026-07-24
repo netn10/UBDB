@@ -19,7 +19,7 @@ def test_suggest_returns_results_shape(client):
 
 
 def test_suggest_does_not_match_on_set_name(client):
-    # Set names are not a suggester signal — only franchises are.
+    # Set names are not a suggester signal; only franchises are.
     resp = client.post("/api/suggest", json={"description": "a hero from Special Guests"})
     assert resp.status_code == 200
     assert resp.get_json()["results"] == []

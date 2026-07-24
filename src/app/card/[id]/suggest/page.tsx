@@ -53,7 +53,7 @@ function SuggestForm({ oracleId }: { oracleId: string }) {
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
-    if (!cardName.trim()) { setError("Card still loading — try again in a moment."); return; }
+    if (!cardName.trim()) { setError("Card still loading, try again in a moment."); return; }
     setError(null);
     setStatus("sending");
     try {
@@ -77,7 +77,7 @@ function SuggestForm({ oracleId }: { oracleId: string }) {
   if (status === "done") {
     return (
       <div className="rounded-card border border-gold/40 bg-gold/10 p-6">
-        <p className="font-display text-lg text-gold">Submitted — thanks!</p>
+        <p className="font-display text-lg text-gold">Submitted. Thanks!</p>
         <p className="mt-2 font-body text-sm text-ink/70 dark:text-ink-dark/70">
           Your reskin is pending moderation and will appear once approved.
         </p>
@@ -112,7 +112,7 @@ function SuggestForm({ oracleId }: { oracleId: string }) {
       <fieldset className="grid gap-2">
         <label className={legend}>Image link *</label>
         <input required type="url" className={field} value={imageUrl} onChange={(e) => setImageUrl(e.target.value)}
-               placeholder="https://… (host it yourself — imgur, drive, etc.)" />
+               placeholder="https://… (host it yourself: imgur, drive, etc.)" />
       </fieldset>
 
       <div className="grid grid-cols-2 gap-4">

@@ -35,8 +35,8 @@ export default function Welcome() {
         The Omen Archive
       </h1>
       <p className="mt-5 max-w-lg font-body text-lg text-ink/70 dark:text-ink-dark/60">
-        The Universes Beyond reskin database. Every card, reimagined —
-        search the multiverse or wander the binder.
+        The Universes Beyond reskin database. Every card, reimagined.
+        Search the multiverse or wander the binder.
       </p>
 
       <Link

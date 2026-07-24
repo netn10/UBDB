@@ -8,7 +8,7 @@ import { WUBRG, MANA_HEX, MANA_LABEL, parseCi, serializeCi, Mana } from "@/lib/c
 import { getRandom, completeCardNames } from "@/lib/api";
 import Autocomplete from "@/components/Autocomplete";
 
-/** Client-side random: fetch an id and push — no server redirect round-trip. */
+/** Client-side random: fetch an id and push, no server redirect round-trip. */
 function RandomLink() {
   const router = useRouter();
   return (
@@ -35,7 +35,7 @@ function SearchForm() {
   }
 
   const fetchNames = useCallback(async (query: string): Promise<string[]> => {
-    if (/[:<>=]/.test(query)) return []; // DSL mode — skip name typeahead
+    if (/[:<>=]/.test(query)) return []; // DSL mode, skip name typeahead
     return completeCardNames(query);
   }, []);
 
@@ -53,7 +53,7 @@ function SearchForm() {
         onChange={setQ}
         fetchSuggestions={fetchNames}
         onSelect={go}
-        placeholder="Search cards — try t:creature id:w cmc<=3 fr:fallout"
+        placeholder="Search cards, try t:creature id:w cmc<=3 fr:fallout"
         className="w-full rounded-card border border-ink/15 dark:border-ink-dark/15 bg-cardstock/60 dark:bg-frame/60 px-3 py-2 text-sm font-body placeholder:text-ink/40 dark:placeholder:text-ink-dark/40 focus:border-gold focus:bg-transparent"
       />
     </form>

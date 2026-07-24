@@ -58,9 +58,8 @@ def _reskins():
 
 
 def _load_counts() -> dict:
-    """Approved-reskin counts per oracle_id, computed per request. Drives
-    is:reskinned + tile badges — recomputed each call so counts never go stale
-    across worker processes."""
+    """Approved-reskin counts per oracle_id. Recomputed per request so counts
+    never go stale across workers."""
     try:
         pipeline = [
             {"$match": {"approved": True}},
@@ -80,7 +79,7 @@ def _count_for(oracle_id: str) -> int:
 
 
 def mongo_guarded(fn):
-    """Reskin/admin routes hard-depend on Mongo — surface outages as 503."""
+    """Reskin/admin routes hard-depend on Mongo, so surface outages as 503."""
     @wraps(fn)
     def wrapper(*args, **kwargs):
         try:
@@ -133,9 +132,8 @@ _STYLES = {"name-bottom", "nickname-bar", "code"}
 @app.post("/api/cards/<oracle_id>/reskins")
 @mongo_guarded
 def submit_reskin(oracle_id):
-    """Accept a community reskin submission. Lands unapproved (moderation gate);
-    image is a designer-hosted URL (no upload storage). AI art is banned per the
-    community rules, enforced by a human at approval time."""
+    """Accept a community reskin submission. Lands unapproved; image is a
+    designer-hosted URL. AI art is banned, enforced by a human at approval."""
     if get_card(oracle_id) is None:
         return jsonify({"error": "not found"}), 404
     body = request.get_json(silent=True) or {}
@@ -284,9 +282,8 @@ def admin_reject(rid):
 @app.post("/api/resolve")
 @mongo_guarded
 def resolve_decklist():
-    """Resolve decklist names to cards + their approved reskins. Body:
-    {"names": [{"name": str, "qty": int}, ...]}. Unmatched names come back with
-    card=null so the UI can flag them."""
+    """Resolve decklist names to cards + approved reskins.
+    Body: {"names": [{"name", "qty"}]}. Unmatched come back card=null."""
     body = request.get_json(silent=True) or {}
     entries = body.get("names") or []
     results = []

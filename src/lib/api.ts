@@ -1,9 +1,8 @@
 import { preload } from "swr";
 import { UbCard, SearchResult, Reskin, SuggestResponse } from "@/types/types";
 
-// Same-origin by default: the browser hits /api on this host and Next's
-// rewrite proxies it to the internal Flask backend. Override with
-// NEXT_PUBLIC_API_URL only when the backend lives on a separate origin.
+// Same-origin by default (Next proxies /api to the internal Flask backend).
+// Set NEXT_PUBLIC_API_URL only for a separate-origin backend.
 export const API_BASE_URL =
   process.env.NEXT_PUBLIC_API_URL ?? "/api";
 
@@ -62,13 +61,12 @@ export async function getRandom(): Promise<string> {
   return body.oracle_id;
 }
 
-// SWR cache keys — single source so page reads and hover-prefetch never drift.
+// SWR cache keys: single source so page reads and hover-prefetch never drift.
 export const cardKey = (id: string) => ["card", id];
 export const reskinsKey = (id: string) => ["reskins", id];
 
 /** Warm the SWR cache for a card + its reskins (call on tile hover).
- *  Prefetch is best-effort: swallow rejections so a failing fetch (e.g. a
- *  503 when the DB is unavailable) can't surface as an unhandled rejection. */
+ *  Best-effort: rejections are swallowed. */
 export function prefetchCard(id: string): void {
   preload(cardKey(id), () => getCard(id)).catch(() => {});
   preload(reskinsKey(id), () => getReskins(id)).catch(() => {});

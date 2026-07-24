@@ -219,7 +219,7 @@ def test_franchise_or_pipe():
 
 
 def test_franchise_comma_in_name_not_split():
-    # "Warhammer 40,000" must stay one needle — comma is not an OR delimiter.
+    # "Warhammer 40,000" must stay one needle; comma is not an OR delimiter.
     assert _names('fr:"warhammer 40,000"') == ["Lightning Bolt"]
 
 
@@ -241,7 +241,7 @@ def test_name_regex_differs_from_substring():
 
 
 def test_oracle_regex_digit_class():
-    # o:/deal \d+ damage/ — quoted so the tokenizer keeps the space.
+    # o:/deal \d+ damage/: quoted so the tokenizer keeps the space.
     assert _names('o:"/deal \\d+ damage/"') == ["Lightning Bolt"]
 
 

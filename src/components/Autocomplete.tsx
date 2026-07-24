@@ -49,7 +49,7 @@ export default function Autocomplete({
       return;
     }
     if (chosen.current === query) {
-      chosen.current = null; // just selected this value — don't reopen
+      chosen.current = null; // just selected this value, don't reopen
       return;
     }
     const id = ++seq.current;

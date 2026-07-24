@@ -1,15 +1,10 @@
-// MTG color-pie helpers. Single source for WUBRG identity → tint mapping,
-// mirroring how real card frames pick a color: mono = that hue, multi = gold,
-// colorless = artifact steel.
+// MTG color-pie helpers: WUBRG identity → tint. Mono = that hue, multi = gold, colorless = steel.
 
 export const WUBRG = ["W", "U", "B", "R", "G"] as const;
 export type Mana = (typeof WUBRG)[number];
 
-// SSOT for saturated identity dots (JS inline styles). These values are
-// mirrored by hand in tailwind.config.js `colors.mana` (used as utility
-// classes + the app-wide danger token `mana-r`). Keep the two in sync.
-// NOTE: ManaCost.tsx uses a SEPARATE, intentionally-pale palette for in-cost
-// symbols — do not fold it in here.
+// Saturated identity dots (inline styles), mirrored by hand in tailwind.config.js
+// `colors.mana`; keep in sync. ManaCost.tsx uses a separate pale palette, don't fold in.
 export const MANA_HEX: Record<Mana, string> = {
   W: "#F8F2D8",
   U: "#3A7DC4",
@@ -29,7 +24,7 @@ export const MANA_LABEL: Record<Mana, string> = {
 const GOLD = "#C9A227";
 const STEEL = "#8A8172";
 
-/** Frame tint for a card's color identity — the spine/glow color on a tile. */
+/** Frame tint for a card's color identity: the spine/glow color on a tile. */
 export function identityTint(identity: string[]): string {
   const colors = identity.filter((c): c is Mana => (WUBRG as readonly string[]).includes(c));
   if (colors.length === 0) return STEEL; // colorless / artifact

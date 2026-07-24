@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 
 const PLACEHOLDER = `<svg xmlns="http://www.w3.org/2000/svg" width="265" height="370"><rect width="265" height="370" fill="#222"/><text x="50%" y="50%" font-family="sans-serif" font-size="14" text-anchor="middle" fill="#888">No image</text></svg>`;
 
-// Only proxy known Scryfall image hosts — this is a public CORS proxy endpoint,
+// Only proxy known Scryfall image hosts; this is a public CORS proxy endpoint,
 // so it must not act as an open SSRF relay to arbitrary/internal URLs.
 const ALLOWED_HOSTS = ["cards.scryfall.io", "c1.scryfall.com", "c2.scryfall.com", "svgs.scryfall.io"];
 

@@ -95,9 +95,8 @@ def _numeric_pred(card_key, op, value):
 
 
 def _rarity_pred(op, value):
-    # Pipe-separated equality means OR (e.g. r:rare|mythic). A card has one
-    # rarity, so ANDing repeated r: tokens would match nothing. Pipe (not comma)
-    # avoids colliding with commas inside values.
+    # Pipe = OR (r:rare|mythic). A card has one rarity, so ANDing repeated r:
+    # would match nothing. Pipe avoids colliding with commas inside values.
     wants = [v.strip().lower() for v in value.split("|") if v.strip()]
     want = wants[0] if wants else value.lower()
     want_rank = RARITY_RANK.get(want)
@@ -131,7 +130,7 @@ def _substr_pred(card_key, value):
 def _text_pred(card_key, value):
     """Scryfall text match: /pattern/ is a case-insensitive regex (unanchored,
     like Scryfall); anything else is a plain case-insensitive substring.
-    Returns (predicate, warning) — warning set only for an invalid regex.
+    Returns (predicate, warning); warning set only for an invalid regex.
     """
     if len(value) >= 2 and value[0] == "/" and value[-1] == "/":
         try:
@@ -178,7 +177,7 @@ def _unreskin_pred(reskin_counts):
 
 def _reskin_count_pred(reskin_counts, op, value):
     # Numeric predicate over a card's approved-reskin count (from reskin_counts,
-    # not a card field — the count isn't stamped until after filtering).
+    # not a card field; the count isn't stamped until after filtering).
     target = _num(value)
 
     def pred(card):

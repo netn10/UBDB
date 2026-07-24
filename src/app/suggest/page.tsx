@@ -60,7 +60,7 @@ export default function SuggestReskinPage() {
             className={field}
             value={description}
             onChange={(e) => setDescription(e.target.value)}
-            placeholder="e.g. a loyal guardian who protects survivors — tough, from The Last of Us"
+            placeholder="e.g. a tough, loyal guardian who protects survivors, from The Last of Us"
           />
         </fieldset>
 

@@ -22,9 +22,8 @@ import franchise_map
 
 SEARCH_URL = "https://api.scryfall.com/cards/search"
 QUERY = "is:ub game:paper"
-# Universes Within: the MTG-native counterparts of UB cards. Not Universes
-# Beyond, so not part of this database. Scryfall no longer tags them is:ub, but
-# exclude the set explicitly in case a printing is ever re-filed under one.
+# Universes Within = MTG-native counterparts, not UB, so excluded. Scryfall no
+# longer tags them is:ub; exclude the set explicitly as a safety net.
 UNIVERSES_WITHIN = {"slx"}
 # Loaded once on first use; tests monkeypatch this to inject deterministic maps.
 _MAPS = None
@@ -126,10 +125,8 @@ def _face_or_top(raw: dict, key):
 def group_prints(raw_cards: list) -> list:
     """Group Scryfall printings by oracle_id into ub_card records."""
     by_oracle = {}
-    # Scryfall's `name` for a Secret Lair UB card is its Universes Within
-    # (MTG-native) name; `printed_name` is the name actually on the card, e.g.
-    # name "Greymond, Avacyn's Stalwart" / printed_name "Rick, Steadfast
-    # Leader". Prefer the printed name and keep the other for reference.
+    # For Secret Lair UB cards, Scryfall's `name` is the Universes Within
+    # (MTG-native) name; `printed_name` is what's on the card. Prefer printed.
     printed_names = {}
     for raw in raw_cards:
         oid = raw.get("oracle_id")
@@ -168,13 +165,9 @@ def group_prints(raw_cards: list) -> list:
         card["prints"] = prints
         if not prints:
             continue  # existed only as Universes Within, so not a UB card
-        # Keep only cards born in Universes Beyond, i.e. cards that have no
-        # within-universe (normal Magic) equivalent. A card whose every UB
-        # printing is a reprint already existed as a regular card before its
-        # UB printing (e.g. Abrade), so its "Universes Within" version is that
-        # original card and it needs no community reskin. A card with at least
-        # one original (reprint == False) UB printing debuted in UB and has no
-        # such counterpart.
+        # Keep only UB-born cards: those with at least one original (non-reprint)
+        # UB printing. If every UB printing is a reprint, the card already existed
+        # as normal Magic (e.g. Abrade) and needs no reskin.
         if not any(p["reprint"] is False for p in prints):
             continue
         printed = printed_names.get(card["oracle_id"])

@@ -1,8 +1,6 @@
 "use client";
-// Shared "no Universes Within version yet" tile treatment. When the dim
-// preference is on, un-reskinned card art desaturates + dims (restored on
-// hover) and gets a corner tag. Kept in one place so grid/binder/DFC tiles
-// stay consistent.
+// Shared "no Universes Within version yet" tile treatment: un-reskinned art
+// dims + desaturates (restored on hover) with a corner tag. One place = consistent.
 
 /** A card is "dimmed" when the dim toggle is on and it has zero reskins. */
 export function isDimmed(count: number | undefined, dim: boolean): boolean {
