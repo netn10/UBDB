@@ -1,3 +1,6 @@
+import datetime as dt
+
+
 def test_list_cards_returns_count_and_cards(client):
     resp = client.get("/api/cards")
     assert resp.status_code == 200
@@ -162,3 +165,84 @@ def test_me_and_logout(client, admin_token):
     assert client.get("/api/auth/me", headers=hdr).get_json()["role"] == "admin"
     assert client.post("/api/auth/logout", headers=hdr).status_code == 204
     assert client.get("/api/auth/me", headers=hdr).status_code == 401
+
+
+def _seed_reskins(docs):
+    """Insert reskin docs straight into mongomock. The submit API always sets
+    is_recommended=False and stamps its own created_at, so ordering and
+    recommendation tests need direct writes."""
+    import db
+    db.get_db().reskins.insert_many(docs)
+
+
+def _reskin(rid, *, face=0, approved=True, recommended=False, day=1, name=None):
+    return {
+        "_id": rid,
+        "oracle_id": "oracle-1",
+        "face": face,
+        "designer_name": "nati",
+        "reskin_name": name or rid,
+        "image_url": f"https://x/{rid}.jpg",
+        "art_credit": "",
+        "art_source": "original",
+        "style": "name-bottom",
+        "tags": [],
+        "is_recommended": recommended,
+        "approved": approved,
+        "created_at": dt.datetime(2025, 1, day),
+    }
+
+
+def test_top_reskin_prefers_recommended_over_earlier(client):
+    _seed_reskins([
+        _reskin("early", day=1, name="Earliest"),
+        _reskin("rec", day=9, recommended=True, name="Recommended"),
+    ])
+    card = client.get("/api/cards/oracle-1").get_json()
+    assert card["top_reskin"] == {"reskin_name": "Recommended",
+                                  "image_url": "https://x/rec.jpg"}
+    assert card["reskin_count"] == 2
+
+
+def test_top_reskin_falls_back_to_earliest(client):
+    _seed_reskins([
+        _reskin("late", day=9, name="Later"),
+        _reskin("early", day=1, name="Earliest"),
+    ])
+    card = client.get("/api/cards/oracle-1").get_json()
+    assert card["top_reskin"]["reskin_name"] == "Earliest"
+
+
+def test_back_face_reskin_lands_in_top_reskin_back(client):
+    _seed_reskins([
+        _reskin("front", face=0, name="Front art"),
+        _reskin("back", face=1, name="Back art"),
+    ])
+    card = client.get("/api/cards/oracle-1").get_json()
+    assert card["top_reskin"]["reskin_name"] == "Front art"
+    assert card["top_reskin_back"]["reskin_name"] == "Back art"
+    # reskin_count sums across faces.
+    assert card["reskin_count"] == 2
+
+
+def test_unapproved_reskin_never_becomes_top(client):
+    _seed_reskins([
+        _reskin("pending", day=1, approved=False, recommended=True, name="Pending"),
+        _reskin("live", day=5, name="Live"),
+    ])
+    card = client.get("/api/cards/oracle-1").get_json()
+    assert card["top_reskin"]["reskin_name"] == "Live"
+    assert card["reskin_count"] == 1
+
+
+def test_card_with_no_reskins_has_null_tops(client):
+    card = client.get("/api/cards/oracle-1").get_json()
+    assert card["reskin_count"] == 0
+    assert card["top_reskin"] is None
+    assert card["top_reskin_back"] is None
+
+
+def test_list_cards_carries_top_reskin(client):
+    _seed_reskins([_reskin("only", name="Only one")])
+    card = client.get("/api/cards").get_json()["cards"][0]
+    assert card["top_reskin"]["image_url"] == "https://x/only.jpg"
