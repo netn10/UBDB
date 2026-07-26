@@ -43,3 +43,20 @@ def test_set_map_is_total_over_the_snapshot():
 def test_no_card_is_unassigned():
     stray = [c["name"] for c in _cards() if c["franchises"] == ["Unassigned"]]
     assert not stray, f"cards resolved to Unassigned: {stray}"
+
+
+def test_no_card_name_uses_private_use_area_glyphs():
+    """A printed_name from a non-English printing must never become a card's
+    name. Tengwar "The One Ring" (ltr #0) renders as tofu and cannot be typed
+    into search, so the card is unreachable."""
+    bad = [c["name"] for c in _cards()
+           if any("" <= ch <= "" for ch in c["name"])]
+    assert not bad, f"names with Private Use Area glyphs: {bad!r}"
+
+
+def test_universes_within_name_never_equals_the_card_name():
+    """A card cannot be its own Universes Within counterpart. When they match,
+    a translated printing leaked into the printed_name swap."""
+    same = [c["name"] for c in _cards()
+            if c["universes_within_name"] == c["name"]]
+    assert not same, f"card is its own Universes Within counterpart: {same}"
