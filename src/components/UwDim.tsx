@@ -19,3 +19,14 @@ export function NoUwTag() {
     </span>
   );
 }
+
+/** Corner label for a tile showing community reskin art instead of the printing.
+ *  Shares NoUwTag's slot, but the two can never collide: a tile showing a reskin
+ *  has reskin_count > 0, so isDimmed is false. */
+export function ReskinTag() {
+  return (
+    <span className="pointer-events-none absolute left-2 top-2 z-10 rounded-card bg-gold/85 px-1.5 py-0.5 font-mono text-[10px] font-semibold uppercase tracking-wide text-frame ring-1 ring-gold/50 backdrop-blur-sm">
+      ◈ Reskin
+    </span>
+  );
+}
