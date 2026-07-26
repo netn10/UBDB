@@ -127,12 +127,16 @@ def group_prints(raw_cards: list) -> list:
     by_oracle = {}
     # For Secret Lair UB cards, Scryfall's `name` is the Universes Within
     # (MTG-native) name; `printed_name` is what's on the card. Prefer printed.
+    # English only: on a non-English printing `printed_name` is a translation of
+    # the same card, not a Universes Within pairing. The One Ring's Tengwar
+    # printing (ltr #0, lang qya) and the Assassin's Creed Greek printings would
+    # otherwise overwrite the card's name with unsearchable script.
     printed_names = {}
     for raw in raw_cards:
         oid = raw.get("oracle_id")
         if not oid:
             continue  # cards without a stable oracle_id can't be anchored
-        if raw.get("printed_name"):
+        if raw.get("printed_name") and (raw.get("lang") or "en") == "en":
             printed_names.setdefault(oid, raw["printed_name"])
         card = by_oracle.get(oid)
         if card is None:

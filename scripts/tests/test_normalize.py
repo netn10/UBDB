@@ -200,3 +200,37 @@ def test_group_builds_faces_for_dfc():
 def test_group_faces_empty_for_single_faced():
     card = group_prints(_prints()[:2])[0]  # Aang
     assert card["faces"] == []
+
+
+def test_group_uses_printed_name_from_english_printing():
+    # Secret Lair UB cards: Scryfall's `name` is the Universes Within name and
+    # `printed_name` is what is actually printed, so the two are swapped.
+    raw = _prints()[:1]
+    raw[0]["lang"] = "en"
+    raw[0]["printed_name"] = "Ken, Burning Brawler"
+    card = group_prints(raw)[0]
+    assert card["name"] == "Ken, Burning Brawler"
+    assert card["universes_within_name"] == "Aang, Airbending Master"
+
+
+def test_group_ignores_printed_name_from_non_english_printing():
+    # A non-English printing's printed_name is a translation of the same card,
+    # not a Universes Within pairing.
+    raw = _prints()[:1]
+    raw[0]["lang"] = "grc"
+    raw[0]["printed_name"] = "Κλεοπάτρα, Ἐξόριστος Φαραώ"
+    card = group_prints(raw)[0]
+    assert card["name"] == "Aang, Airbending Master"
+    assert card["universes_within_name"] is None
+
+
+def test_group_non_english_print_does_not_poison_a_multi_print_card():
+    # The One Ring's shape: many English printings plus one Tengwar printing
+    # (ltr #0, lang qya) whose printed_name is Private Use Area glyphs.
+    tengwar = dict(_prints()[0])
+    tengwar["lang"] = "qya"
+    tengwar["collector_number"] = "0"
+    tengwar["printed_name"] = " "
+    card = group_prints(_prints()[:2] + [tengwar])[0]
+    assert card["name"] == "Aang, Airbending Master"
+    assert card["universes_within_name"] is None
