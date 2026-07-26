@@ -246,3 +246,20 @@ def test_list_cards_carries_top_reskin(client):
     _seed_reskins([_reskin("only", name="Only one")])
     card = client.get("/api/cards").get_json()["cards"][0]
     assert card["top_reskin"]["image_url"] == "https://x/only.jpg"
+
+
+def test_search_results_carry_top_reskin(client):
+    _seed_reskins([
+        _reskin("early", day=1, name="Earliest"),
+        _reskin("rec", day=9, recommended=True, name="Recommended"),
+    ])
+    card = client.get("/api/search?q=Aang").get_json()["cards"][0]
+    assert card["top_reskin"]["reskin_name"] == "Recommended"
+    assert card["top_reskin_back"] is None
+    assert card["reskin_count"] == 2
+
+
+def test_search_reskin_predicate_still_works(client):
+    _seed_reskins([_reskin("only", name="Only one")])
+    assert client.get("/api/search?q=is:reskinned").get_json()["total"] == 1
+    assert client.get("/api/search?q=is:unreskinned").get_json()["total"] == 0

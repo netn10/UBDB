@@ -226,6 +226,7 @@ def search_cards():
         except (TypeError, ValueError):
             return default
 
+    meta = _load_reskin_meta()
     result = search_engine.search(
         _CARDS,
         q=request.args.get("q", ""),
@@ -233,8 +234,9 @@ def search_cards():
         direction=request.args.get("dir", "asc"),
         page=_int("page", 1),
         page_size=_int("page_size", 60),
-        reskin_counts=_counts_from(_load_reskin_meta()),
+        reskin_counts=_counts_from(meta),
     )
+    result["cards"] = [_with_reskins(c, meta) for c in result["cards"]]
     return jsonify(result)
 
 
