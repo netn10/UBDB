@@ -79,25 +79,46 @@ def _reskins():
     return db.get_db().reskins
 
 
-def _load_counts() -> dict:
-    """Approved-reskin counts per oracle_id. Recomputed per request so counts
-    never go stale across workers."""
+def _load_reskin_meta(oracle_id=None) -> dict:
+    """Approved-reskin facts per card: total count across faces, plus the top
+    reskin for each face. Top = recommended first, then earliest submitted.
+    Recomputed per request so nothing goes stale across workers.
+    Pass oracle_id to scope the aggregate to a single card."""
+    match = {"approved": True}
+    if oracle_id is not None:
+        match["oracle_id"] = oracle_id
+    meta: dict = {}
     try:
         pipeline = [
-            {"$match": {"approved": True}},
-            {"$group": {"_id": "$oracle_id", "n": {"$sum": 1}}},
+            {"$match": match},
+            {"$sort": {"is_recommended": -1, "created_at": 1}},
+            {"$group": {"_id": {"oracle_id": "$oracle_id", "face": "$face"},
+                        "n": {"$sum": 1},
+                        "top": {"$first": {"reskin_name": "$reskin_name",
+                                           "image_url": "$image_url"}}}},
         ]
-        return {d["_id"]: d["n"] for d in _reskins().aggregate(pipeline)}
+        for row in _reskins().aggregate(pipeline):
+            entry = meta.setdefault(row["_id"]["oracle_id"], {"n": 0, "tops": {}})
+            entry["n"] += row["n"]
+            # Legacy docs predating the face field group under None; treat as front.
+            entry["tops"][row["_id"].get("face") or 0] = row["top"]
     except PyMongoError:
         return {}
+    return meta
 
 
-def _count_for(oracle_id: str) -> int:
-    """Approved-reskin count for one card; 0 if Mongo is unavailable."""
-    try:
-        return _reskins().count_documents({"oracle_id": oracle_id, "approved": True})
-    except PyMongoError:
-        return 0
+def _counts_from(meta: dict) -> dict:
+    """Flat {oracle_id: count}, the shape search and suggest predicates want."""
+    return {oracle_id: entry["n"] for oracle_id, entry in meta.items()}
+
+
+def _with_reskins(card: dict, meta: dict) -> dict:
+    """Graft reskin_count and the per-face top reskin onto a card dict."""
+    entry = meta.get(card["oracle_id"]) or {"n": 0, "tops": {}}
+    return {**card,
+            "reskin_count": entry["n"],
+            "top_reskin": entry["tops"].get(0),
+            "top_reskin_back": entry["tops"].get(1)}
 
 
 def mongo_guarded(fn):
@@ -124,8 +145,8 @@ def get_card(oracle_id: str):
 
 @app.get("/api/cards")
 def list_cards():
-    counts = _load_counts()
-    cards = [{**c, "reskin_count": counts.get(c["oracle_id"], 0)} for c in _CARDS]
+    meta = _load_reskin_meta()
+    cards = [_with_reskins(c, meta) for c in _CARDS]
     return jsonify({"cards": cards, "count": len(cards)})
 
 
@@ -134,7 +155,7 @@ def card_detail(oracle_id):
     card = get_card(oracle_id)
     if card is None:
         return jsonify({"error": "not found"}), 404
-    return jsonify({**card, "reskin_count": _count_for(oracle_id)})
+    return jsonify(_with_reskins(card, _load_reskin_meta(oracle_id)))
 
 
 @app.get("/api/cards/<oracle_id>/reskins")
@@ -205,6 +226,7 @@ def search_cards():
         except (TypeError, ValueError):
             return default
 
+    meta = _load_reskin_meta()
     result = search_engine.search(
         _CARDS,
         q=request.args.get("q", ""),
@@ -212,8 +234,9 @@ def search_cards():
         direction=request.args.get("dir", "asc"),
         page=_int("page", 1),
         page_size=_int("page_size", 60),
-        reskin_counts=_load_counts(),
+        reskin_counts=_counts_from(meta),
     )
+    result["cards"] = [_with_reskins(c, meta) for c in result["cards"]]
     return jsonify(result)
 
 
@@ -225,7 +248,7 @@ def suggest_reskin():
     if not description:
         return jsonify({"error": "description required"}), 400
     facets = payload.get("facets") if isinstance(payload.get("facets"), dict) else None
-    counts = _load_counts()
+    counts = _counts_from(_load_reskin_meta())
     cards = [{**c, "reskin_count": counts.get(c["oracle_id"], 0)} for c in _CARDS]
     results, inferred = score_cards(description, cards, facets=facets)
     return jsonify({"results": results, "inferred_facets": inferred})

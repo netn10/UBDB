@@ -2,15 +2,15 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { UbCard } from "@/types/types";
-import { getImageSrc } from "@/lib/api";
 import { useSettings } from "@/lib/settings";
 import { identityTint } from "@/lib/colors";
-import { isDimmed, dimImgClass, NoUwTag } from "./UwDim";
+import { tileArt } from "@/lib/reskinArt";
+import { isDimmed, dimImgClass, NoUwTag, ReskinTag } from "./UwDim";
 
 const PER_SHEET = 9; // 3×3
 
-function Pocket({ card, dim }: { card: UbCard; dim: boolean }) {
-  const img = card.prints[0]?.image_normal ?? card.art_uri;
+function Pocket({ card, dim, prefer }: { card: UbCard; dim: boolean; prefer: boolean }) {
+  const art = tileArt(card, prefer);
   const tint = identityTint(card.color_identity);
   const dimmed = isDimmed(card.reskin_count, dim);
   return (
@@ -19,20 +19,21 @@ function Pocket({ card, dim }: { card: UbCard; dim: boolean }) {
       className="sleeve group relative block overflow-hidden rounded-card border-2 transition duration-200 hover:-translate-y-0.5"
       style={{ borderColor: `${tint}66` }}
     >
-      {img ? (
-        <img src={getImageSrc(img)} alt={card.name} loading="lazy" className={`w-full ${dimmed ? dimImgClass : ""}`} />
+      {art.src ? (
+        <img src={art.src} alt={art.alt} loading="lazy" className={`w-full ${dimmed ? dimImgClass : ""}`} />
       ) : (
         <div className="flex aspect-[5/7] items-center justify-center bg-surface p-2 text-center font-body text-xs dark:bg-surface-dark">
-          {card.name}
+          {art.alt}
         </div>
       )}
       {dimmed && <NoUwTag />}
+      {art.isReskin && <ReskinTag />}
     </Link>
   );
 }
 
 export default function BinderView({ cards }: { cards: UbCard[] }) {
-  const { dimUnreskinned } = useSettings();
+  const { dimUnreskinned, preferReskinArt } = useSettings();
   const [sheet, setSheet] = useState(0);
   const [flipping, setFlipping] = useState(false);
   const sheetCount = Math.max(1, Math.ceil(cards.length / PER_SHEET));
@@ -73,7 +74,7 @@ export default function BinderView({ cards }: { cards: UbCard[] }) {
           ))}
         </div>
         <div className={`grid grid-cols-3 gap-3 ${flipping ? "sheet-flipping" : ""}`}>
-          {pockets.map((c) => <Pocket key={c.oracle_id} card={c} dim={dimUnreskinned} />)}
+          {pockets.map((c) => <Pocket key={c.oracle_id} card={c} dim={dimUnreskinned} prefer={preferReskinArt} />)}
           {/* Pad the last sheet so the 3×3 grid keeps its shape. */}
           {Array.from({ length: PER_SHEET - pockets.length }).map((_, i) => (
             <div key={`empty-${i}`} className="aspect-[5/7] rounded-card border-2 border-dashed border-gold/15" />
