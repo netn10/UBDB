@@ -51,6 +51,8 @@ export interface UbCard {
   prints: Print[];
   faces: CardFace[];
   reskin_count?: number;
+  top_reskin?: TopReskin | null;
+  top_reskin_back?: TopReskin | null;
 }
 
 export interface SearchResult {
@@ -64,6 +66,13 @@ export interface SearchResult {
 
 export type ArtSource = "original" | "token" | "unset" | "alchemy";
 export type ReskinStyle = "name-bottom" | "nickname-bar" | "code";
+
+/** The reskin a browse tile shows for one face: recommended if there is one,
+ *  otherwise the earliest approved. Grafted onto cards by the API. */
+export interface TopReskin {
+  reskin_name: string;
+  image_url: string;
+}
 
 export interface Reskin {
   _id: string;

@@ -4,10 +4,11 @@ import { useEffect, useState } from "react";
 export interface Settings {
   splitDfcTiles: boolean;
   dimUnreskinned: boolean;
+  preferReskinArt: boolean;
 }
 
 const KEY = "ubdb.settings";
-const DEFAULT: Settings = { splitDfcTiles: false, dimUnreskinned: false };
+const DEFAULT: Settings = { splitDfcTiles: false, dimUnreskinned: false, preferReskinArt: false };
 const EVENT = "ubdb-settings";
 
 export function readSettings(): Settings {

@@ -54,6 +54,14 @@ export default function SettingsMenu() {
             />
             Dim cards with no Universes Within version
           </label>
+          <label className="mt-2 flex items-center gap-2">
+            <input
+              type="checkbox"
+              checked={settings.preferReskinArt}
+              onChange={() => writeSettings({ ...settings, preferReskinArt: !settings.preferReskinArt })}
+            />
+            Show the top reskin instead of the original art
+          </label>
         </div>
       )}
     </div>
