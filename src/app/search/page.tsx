@@ -135,6 +135,13 @@ function Results() {
         >
           ◐ Dim no-UW
         </button>
+        <button
+          onClick={() => writeSettings({ ...settings, preferReskinArt: !settings.preferReskinArt })}
+          className={pill(settings.preferReskinArt)}
+          title="Show the top reskin instead of the original art"
+        >
+          ◈ Reskin art
+        </button>
 
         <div className="ml-auto flex gap-1">
           {(["grid", "list", "text", "binder"] as ViewMode[]).map((v) => (
