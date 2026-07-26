@@ -2,7 +2,8 @@
 import Link from "next/link";
 import { useState } from "react";
 import { UbCard } from "@/types/types";
-import { getImageSrc } from "@/lib/api";
+import { useSettings } from "@/lib/settings";
+import { tileArt } from "@/lib/reskinArt";
 import ManaCost from "./ManaCost";
 import CardGrid from "./CardGrid";
 import BinderView from "./BinderView";
@@ -14,10 +15,6 @@ const PREVIEW_W = 240; // px; card aspect 5/7
 const PREVIEW_H = Math.round((PREVIEW_W * 7) / 5);
 
 type Preview = { src: string; x: number; y: number } | null;
-
-function previewImg(c: UbCard): string {
-  return getImageSrc(c.prints[0]?.image_normal ?? c.art_uri);
-}
 
 /** Cursor-following card image, shown while hovering a name in list/text views. */
 function HoverPreview({ preview }: { preview: Preview }) {
@@ -40,13 +37,14 @@ function HoverPreview({ preview }: { preview: Preview }) {
 
 export default function ResultViews({ cards, view }: { cards: UbCard[]; view: ViewMode }) {
   const [preview, setPreview] = useState<Preview>(null);
+  const { preferReskinArt } = useSettings();
 
   if (view === "grid") return <CardGrid cards={cards} />;
   if (view === "binder") return <BinderView cards={cards} />;
 
   // Shared hover handlers for name rows/links.
   const hover = (c: UbCard) => {
-    const src = previewImg(c);
+    const src = tileArt(c, preferReskinArt).src;
     return {
       onMouseEnter: (e: React.MouseEvent) => src && setPreview({ src, x: e.clientX, y: e.clientY }),
       onMouseMove: (e: React.MouseEvent) => src && setPreview({ src, x: e.clientX, y: e.clientY }),

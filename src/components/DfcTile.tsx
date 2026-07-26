@@ -2,19 +2,22 @@
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { UbCard } from "@/types/types";
-import { getImageSrc, prefetchCard } from "@/lib/api";
+import { prefetchCard } from "@/lib/api";
 import { identityTint } from "@/lib/colors";
+import { tileArt } from "@/lib/reskinArt";
 import { ReskinBadge } from "./CardGrid";
-import { isDimmed, dimImgClass, NoUwTag } from "./UwDim";
+import { isDimmed, dimImgClass, NoUwTag, ReskinTag } from "./UwDim";
 
 const FLIP_DELAY_MS = 150;
 const HOLD_MS = 2000;
 
-export default function DfcTile({ card, dim }: { card: UbCard; dim: boolean }) {
+export default function DfcTile({ card, dim, prefer }: { card: UbCard; dim: boolean; prefer: boolean }) {
   const [flipped, setFlipped] = useState(false);
   const timers = useRef<number[]>([]);
-  const front = card.prints[0]?.image_normal ?? card.art_uri;
-  const back = card.prints[0]?.image_back_normal ?? null;
+  const front = tileArt(card, prefer);
+  // Gated on the official back image, not the reskin: the flip only makes
+  // sense for a genuinely double-faced card.
+  const back = card.prints[0]?.image_back_normal ? tileArt(card, prefer, true) : null;
   const dimmed = isDimmed(card.reskin_count, dim);
 
   function clearTimers() {
@@ -43,16 +46,17 @@ export default function DfcTile({ card, dim }: { card: UbCard; dim: boolean }) {
         className={`relative aspect-[5/7] w-full rounded-card border-2 transition-transform duration-500 [transform-style:preserve-3d] group-hover:ring-2 group-hover:ring-gold ${flipped ? "[transform:rotateY(180deg)]" : ""}`}
         style={{ borderColor: `${identityTint(card.color_identity)}66` }}
       >
-        {front && (
-          <img src={getImageSrc(front)} alt={card.name} loading="lazy"
+        {front.src && (
+          <img src={front.src} alt={front.alt} loading="lazy"
                className={`absolute inset-0 h-full w-full rounded-card [backface-visibility:hidden] ${dimmed ? dimImgClass : ""}`} />
         )}
         {back && (
-          <img src={getImageSrc(back)} alt={`${card.name} (back)`} loading="lazy"
+          <img src={back.src} alt={back.alt} loading="lazy"
                className={`absolute inset-0 h-full w-full rounded-card [transform:rotateY(180deg)] [backface-visibility:hidden] ${dimmed ? dimImgClass : ""}`} />
         )}
       </div>
       {dimmed && <NoUwTag />}
+      {front.isReskin && <ReskinTag />}
       <ReskinBadge count={card.reskin_count} />
     </Link>
   );
